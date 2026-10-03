@@ -1,5 +1,6 @@
 "use client";
 
+import TripPilotLogo from "./TripPilotLogo";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 
 const projects = [
@@ -63,7 +64,9 @@ export default function ProjectGallery() {
     <div className="project-view" key={selected ?? "gallery"}>
     {selected === null ? <div className="project-gallery">
       {projects.map((project, index) => <article key={project.style} className={`project-name-card project-name-card--${project.style}`}>
+        {index === 0 && <><span className="trip-card-category">App iOS</span><TripPilotLogo /></>}
         <h3><button ref={element => { triggers.current[index] = element; }} onClick={() => open(index)} aria-label={`Abrir ${project.name}`}>{project.name}</button></h3>
+        {index === 0 && <div className="trip-card-footer"><p>Tu viaje, de la idea<br />al itinerario.</p><span aria-hidden="true">↗</span></div>}
       </article>)}
     </div> : <section className="project-expanded" aria-label="Proyecto seleccionado">
       <div className="project-expanded-stage">

@@ -206,3 +206,37 @@ body { transition: background-color 850ms cubic-bezier(.22,1,.36,1), color 700ms
 :root[data-project-theme="animal-feed"] a:focus-visible,
 :root[data-project-theme="animal-feed"] button:focus-visible { outline-color: #fafaf9; }
 :root[data-project-theme="animal-feed"] ::selection { color: #fff; background: #bd1935; }
+
+/* TripPilot cover exploration with its actual iOS icon. */
+.project-name-card--trip { display: flex; flex-direction: column; justify-content: center; gap: 18px; background: #e9f0eb; color: #173e35; }
+.trip-card-category { position: absolute; top: 28px; left: 28px; font-size: 12px; color: #45685b; letter-spacing: .035em; }
+.trip-card-logo { width: clamp(110px, 11vw, 160px); height: auto; border-radius: 24%; box-shadow: 0 14px 28px -16px #02302b65; }
+.project-name-card--trip h3 { padding: 0 24px; font-size: clamp(30px, 2.7vw, 40px); }
+.trip-card-footer { position: absolute; bottom: 26px; left: 28px; right: 28px; display: flex; justify-content: space-between; align-items: end; gap: 16px; }
+.trip-card-footer p { margin: 0; font-size: 14px; line-height: 1.5; letter-spacing: -.01em; color: #45685b; }
+.trip-card-footer > span { font-size: 25px; font-weight: 300; transition: transform 250ms ease; }
+.project-name-card--trip:hover .trip-card-footer > span { transform: translate(2px, -2px); }
+@media (max-width: 700px) { .trip-card-logo { width: 130px; } }
+
+/* The plane follows the tilted orbit, with its nose tangent to its path. */
+.trip-logo-plane-orbit {
+  offset-path: path("M 785 290 C 675 130 75 625 170 750 C 265 875 895 450 785 290 Z");
+  offset-anchor: 0px 0px;
+  offset-rotate: auto;
+  animation: trip-logo-flight 8s cubic-bezier(.45,0,.25,1) infinite;
+}
+@keyframes trip-logo-flight {
+  0%, 62% { offset-distance: 0%; }
+  92%, 100% { offset-distance: 100%; }
+}
+@media (prefers-reduced-motion: reduce) { .trip-logo-plane-orbit { animation: none; } }
+
+/* Occlude the rear half of the flight with the globe's full silhouette.
+   The depth switch happens at the outer turn, clear of the globe. */
+.trip-logo-occlusion { animation: trip-logo-depth 8s steps(1, end) infinite; }
+@keyframes trip-logo-depth {
+  0% { opacity: 1; }
+  73.625% { opacity: 0; }
+  100% { opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) { .trip-logo-occlusion { animation: none; opacity: 1; } }
