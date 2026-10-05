@@ -240,3 +240,121 @@ body { transition: background-color 850ms cubic-bezier(.22,1,.36,1), color 700ms
   100% { opacity: 1; }
 }
 @media (prefers-reduced-motion: reduce) { .trip-logo-occlusion { animation: none; opacity: 1; } }
+
+
+/* Reveal the project first, then sweep its color across the page. */
+body { isolation: isolate; }
+main.container, .footer { position: relative; z-index: 1; }
+:root[data-project-painting="true"] body { transition: none; }
+.project-color-paint { position: fixed; inset: 0; z-index: 0; pointer-events: none; animation: project-paint-spread 1100ms cubic-bezier(.3,.05,.2,1) both; }
+.project-expanded-cover { position: relative; overflow: hidden; }
+.project-expanded-cover h3 { position: relative; z-index: 2; transition: opacity 650ms ease, transform 650ms ease, color 650ms ease; }
+.project-browser[data-waiting="true"] .project-expanded-cover h3 { opacity: 0; transform: translateY(10px); }
+.project-browser[data-painting="true"] .project-expanded-cover h3 { color: #f7f5f0; }
+.project-panel-paint { position: absolute; inset: 0; z-index: 1; animation: project-paint-spread 1100ms cubic-bezier(.3,.05,.2,1) both; }
+@keyframes project-paint-spread {
+  from { clip-path: polygon(0 0, 0 0, 0 100%, 0 100%); }
+  to { clip-path: polygon(0 0, 125% 0, 100% 100%, 0 100%); }
+}
+
+/* Particle opening: reveal the interface as the cloud becomes the portrait. */
+.header, .hero .scroll-name, .hero-bottom, .particle-toggle { transition: opacity 650ms ease; }
+:root[data-particle-intro="loading"] .header,
+:root[data-particle-intro="loading"] .hero .scroll-name,
+:root[data-particle-intro="loading"] .hero-bottom,
+:root[data-particle-intro] .particle-toggle { opacity: 0; visibility: hidden; pointer-events: none; }
+
+/* TripPilot project introduction, with an emblem crossing the lower edge. */
+.project-expanded-cover--trip { overflow: visible; }
+.project-expanded-cover--trip .project-panel-paint { border-radius: inherit; }
+/* TripPilot: product story, two real screens and a floating app emblem. */
+.project-expanded-cover--trip { min-height: 540px; height: min(66svh, 700px); }
+.trip-project-content { position: relative; z-index: 2; width: 100%; height: 100%; display: grid; grid-template-columns: .95fr 1.05fr; align-items: center; gap: clamp(20px, 3vw, 48px); padding: 42px clamp(28px, 4vw, 68px) 68px; text-align: left; overflow: hidden; border-radius: inherit; transition: opacity 700ms ease, transform 850ms cubic-bezier(.16,1,.3,1), color 650ms ease; }
+.trip-project-eyebrow { display: block; font-size: 12px; letter-spacing: .1em; opacity: .75; margin-bottom: 24px; }
+.project-expanded-cover .trip-project-copy h3 { padding: 0; font-size: clamp(36px, 4.1vw, 64px); line-height: 1.02; font-weight: 450; letter-spacing: -.055em; }
+.trip-project-copy p { max-width: 330px; margin: 22px 0 26px; font-size: clamp(14px, 1.15vw, 17px); line-height: 1.65; opacity: .85; text-wrap: pretty; }
+.trip-project-flow { list-style: none; padding: 0; margin: 0 0 26px; display: grid; gap: 11px; font-size: 13px; }
+.trip-project-flow li { display: flex; align-items: center; gap: 14px; }
+.trip-project-flow li span { font-size: 10px; opacity: .55; font-variant-numeric: tabular-nums; }
+.trip-project-role { display: block; font-size: 11px; opacity: .7; }
+.trip-project-screens { position: relative; display: flex; justify-content: center; align-items: center; min-width: 0; padding: 18px 0; }
+.trip-project-screens::before { content: ""; position: absolute; inset: 12% -12%; border-radius: 50%; background: radial-gradient(ellipse, #b6dbc623, transparent 70%); pointer-events: none; }
+.trip-project-device { position: relative; flex-shrink: 0; width: 55%; max-width: min(240px, 21svh); padding: 5px; border-radius: 30px; background: #172720; box-shadow: 0 28px 45px -18px #082d2870, inset 0 0 0 1px #ffffff26; transition: transform 1000ms cubic-bezier(.16,1,.3,1); }
+.trip-project-device img { display: block; width: 100%; height: auto; border-radius: 25px; }
+.trip-project-device--back { transform: translateY(-22px) rotate(-8deg) scale(.93); margin-right: -30px; }
+.trip-project-device--front { transform: translateY(22px) rotate(5deg); }
+.trip-project-emblem { position: absolute; z-index: 3; left: 50%; bottom: 0; transform: translate(-50%, 50%); line-height: 0; transition: opacity 650ms ease; }
+.trip-project-emblem .trip-card-logo { display: block; width: clamp(84px, 8vw, 112px); box-shadow: 0 16px 30px -12px #092d2870; }
+.project-browser[data-waiting="true"] .trip-project-content { opacity: 0; transform: translateY(14px); }
+.project-browser[data-waiting="true"] .trip-project-emblem { opacity: 0; }
+.project-browser[data-waiting="true"] .trip-project-device--back { transform: translate(12px, 8px) rotate(-3deg) scale(.93); }
+.project-browser[data-waiting="true"] .trip-project-device--front { transform: translate(-12px, 38px) rotate(1deg); }
+.project-browser[data-painting="true"] .trip-project-content { color: #f7f5f0; }
+@media (max-width: 1100px) and (min-width: 701px) {
+ .trip-project-content { padding-inline: 28px; gap: 20px; }
+ .project-expanded-cover .trip-project-copy h3 { font-size: 42px; }
+ .trip-project-device { width: 57%; padding: 4px; border-radius: 24px; }
+ .trip-project-device img { border-radius: 20px; }
+}
+@media (max-width: 700px) {
+ .project-expanded-cover--trip { height: auto; min-height: 0; margin-bottom: 48px; }
+ .trip-project-content { grid-template-columns: 1fr; gap: 32px; padding: 32px 22px 72px; }
+ .trip-project-eyebrow { margin-bottom: 18px; font-size: 10px; }
+ .project-expanded-cover .trip-project-copy h3 { font-size: clamp(32px, 8vw, 46px); }
+ .trip-project-copy p { font-size: 14px; margin: 18px 0; }
+ .trip-project-flow { font-size: 12px; gap: 9px; margin-bottom: 20px; }
+ .trip-project-device { width: 56%; max-width: 174px; border-radius: 22px; padding: 4px; }
+ .trip-project-device img { border-radius: 18px; }
+ .trip-project-device--back { margin-right: -18px; }
+ .trip-project-role { font-size: 10px; }
+}
+@media (prefers-reduced-motion: reduce) { .trip-project-content, .trip-project-emblem, .trip-project-device { transition: none; } }
+
+/* Five synchronized product views; screenshots retain their full aspect ratio. */
+.trip-showcase { grid-template-columns: 1fr 1fr; }
+.trip-showcase-story { animation: trip-story-in 550ms ease both; min-height: 248px; }
+.trip-showcase-label { display: block; margin-bottom: 14px; font-size: 12px; opacity: .7; }
+.project-expanded-cover .trip-showcase-story h3 { font-size: clamp(32px, 3.5vw, 54px); max-width: 390px; text-wrap: balance; }
+.trip-showcase-story p { max-width: 350px; }
+.trip-showcase-phone { position: relative; justify-self: center; width: min(100%, 280px, 23svh); aspect-ratio: 1206 / 2622; border: 5px solid #172720; box-sizing: content-box; border-radius: 30px; overflow: hidden; background: #f7f6ef; box-shadow: 0 28px 48px -18px #082d2880; transform: rotate(2deg); }
+.trip-showcase-frame { position: absolute; inset: 0; opacity: 0; transition: opacity 650ms ease; }
+.trip-showcase-frame[data-current="true"] { opacity: 1; }
+.trip-showcase-frame img { display: block; width: 100%; height: 100%; object-fit: contain; }
+.trip-showcase-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 14px; margin: 8px 0 24px; }
+.trip-showcase-dots { display: flex; }
+.trip-showcase-dots button { border: 0; background: none; color: inherit; width: 30px; height: 44px; padding: 0; display: grid; place-items: center; cursor: pointer; }
+.trip-showcase-dots button span { width: 6px; height: 6px; border-radius: 10px; background: currentColor; opacity: .3; transition: width 350ms ease, opacity 350ms ease; }
+.trip-showcase-dots button[aria-current="true"] span { width: 22px; opacity: 1; }
+.trip-showcase-pause { color: inherit; background: none; border: 0; min-height: 44px; padding: 4px; font: inherit; font-size: 11px; cursor: pointer; }
+.trip-showcase-count { font-size: 10px; opacity: .65; font-variant-numeric: tabular-nums; white-space: nowrap; }
+@keyframes trip-story-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+@media (max-width: 700px) {
+ .trip-showcase { grid-template-columns: 1fr; gap: 24px; }
+ .trip-showcase-story { min-height: 220px; }
+ .trip-showcase-phone { width: min(100% - 10px, 250px); border-radius: 26px; transform: none; }
+ .trip-showcase-controls { gap: 8px; }
+ .trip-showcase-dots button { width: 26px; }
+}
+@media (prefers-reduced-motion: reduce) { .trip-showcase-story { animation: none; } .trip-showcase-frame, .trip-showcase-dots button span { transition: none; } }
+
+.trip-showcase-frame video { display: block; width: 100%; height: 100%; object-fit: contain; background: #f7f6ef; }
+.trip-showcase-frame { pointer-events: none; }
+.trip-showcase-frame[data-current="true"] { pointer-events: auto; }
+.trip-showcase-dots { flex-wrap: wrap; }
+
+/* Animal Feed uses the original Los Abuelos logo and brand palette. */
+.project-name-card--shop { display: flex; flex-direction: column; justify-content: center; gap: 0; background: #0b1d4c; color: #f7f8ed; border-color: #ffffff14; }
+.animal-card-category { position: absolute; top: 28px; left: 28px; color: #d1d7e4; font-size: 12px; letter-spacing: .035em; }
+.animal-card-logo { display: block; width: clamp(220px, 22vw, 320px); max-width: 100%; height: auto; margin: -46px 0 -50px; pointer-events: none; }
+.project-name-card--shop h3 { padding: 0 24px; font-size: clamp(30px, 2.7vw, 40px); transform: translateY(-40px); }
+.animal-card-footer { position: absolute; bottom: 26px; left: 28px; right: 28px; display: flex; justify-content: space-between; align-items: end; gap: 16px; }
+.animal-card-footer p { margin: 0; font-size: 14px; line-height: 1.5; letter-spacing: -.01em; color: #d1d7e4; }
+.animal-card-footer > span { color: #f32947; font-size: 25px; font-weight: 300; transition: transform 250ms ease; }
+.project-name-card--shop:hover .animal-card-footer > span { transform: translate(2px, -2px); }
+.project-name-card--shop button:focus-visible { outline-color: #f32947; }
+@media (prefers-reduced-motion: reduce) { .animal-card-footer > span { transition: none; } }
+
+/* The hit area belongs to the card, independently of its title placement. */
+.project-card-trigger { position: absolute; inset: 0; z-index: 5; width: 100%; height: 100%; padding: 0; border: 0; border-radius: inherit; background: transparent; cursor: pointer; }
+.project-card-trigger:focus-visible { outline: 2px solid #356551; outline-offset: 5px; }
+.project-name-card--shop .project-card-trigger:focus-visible { outline-color: #f32947; }
