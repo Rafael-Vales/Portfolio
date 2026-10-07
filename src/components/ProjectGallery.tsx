@@ -1,6 +1,7 @@
 "use client";
 
-import Image from "next/image";
+import AnimalFeedLogo from "./AnimalFeedLogo";
+import AnimalFeedShowcase from "./AnimalFeedShowcase";
 import TripPilotShowcase from "./TripPilotShowcase";
 import { createPortal } from "react-dom";
 import TripPilotLogo from "./TripPilotLogo";
@@ -15,6 +16,7 @@ const projects = [
 export default function ProjectGallery() {
 	const [selected, setSelected] = useState<number | null>(null);
 	const [colored, setColored] = useState(false);
+  const [tryingStore, setTryingStore] = useState(false);
 	useLayoutEffect(() => {
 		if (!colored) delete document.documentElement.dataset.projectTheme;
 		else if (selected === 0)
@@ -68,6 +70,7 @@ export default function ProjectGallery() {
 				restoreFocus.current = true;
 				setColored(!painting);
 				setSelected(next);
+                setTryingStore(false);
 				setLeaving(false);
 				if (painting) {
 					timer.current = setTimeout(() => {
@@ -92,6 +95,7 @@ export default function ProjectGallery() {
 		transition(index);
 	}
 	function close() {
+        if (tryingStore) { setTryingStore(false); return; }
 		transition(null);
 	}
 	function step(direction: number) {
@@ -104,6 +108,7 @@ export default function ProjectGallery() {
 		<div
 			className="project-browser"
 			data-leaving={leaving}
+            data-store-open={tryingStore}
 			data-waiting={selected !== null && !colored && !paint}
 			data-painting={Boolean(paint)}
 			onKeyDown={(event) => {
@@ -112,11 +117,11 @@ export default function ProjectGallery() {
 					event.preventDefault();
 					close();
 				}
-				if (event.key === "ArrowLeft") {
+				if (!tryingStore && event.key === "ArrowLeft") {
 					event.preventDefault();
 					step(-1);
 				}
-				if (event.key === "ArrowRight") {
+				if (!tryingStore && event.key === "ArrowRight") {
 					event.preventDefault();
 					step(1);
 				}
@@ -144,7 +149,7 @@ export default function ProjectGallery() {
 						<button
 							ref={back}
 							onClick={close}
-							aria-label="Volver a la galería">
+							aria-label={tryingStore ? "Volver al proyecto" : "Volver a la galería"}>
 							← Volver
 						</button>
 						<span>
@@ -170,9 +175,12 @@ export default function ProjectGallery() {
 								)}
                                 {index === 1 && <>
                                   <span className="animal-card-category">Ecommerce · Los Abuelos</span>
-                                  <Image className="animal-card-logo" src="/images/animal-feed/logo.svg" width={1080} height={1080} alt="" aria-hidden="true" />
+                                  <AnimalFeedLogo />
                                 </>}
-								<h3>{project.name}</h3>
+								{index === 0 ? <div className="trip-card-heading">
+                                  <h3>{project.name}</h3>
+                                  <span className="trip-release-status">Próximamente en App Store</span>
+                                </div> : <h3>{project.name}</h3>}
                                 <button
                                   className="project-card-trigger"
                                   ref={element => { triggers.current[index] = element; }}
@@ -189,6 +197,7 @@ export default function ProjectGallery() {
 										<span aria-hidden="true">↗</span>
 									</div>
 								)}
+                                {index === 2 && <span className="clinic-card-status">En desarrollo</span>}
                                 {index === 1 && <div className="animal-card-footer">
                                   <p>Alimentos y accesorios<br />para tu mascota.</p>
                                   <span aria-hidden="true">↗</span>
@@ -212,8 +221,8 @@ export default function ProjectGallery() {
 							<div
 								key={selected}
 								className={`project-expanded-cover project-expanded-cover--${projects[selected].style}`}
-								aria-live={selected === 0 ? "off" : "polite"}
-								aria-atomic="true">
+								aria-live={selected === 2 ? "polite" : "off"}
+								aria-atomic={selected === 2 ? true : undefined}>
 								{selected === 0 ? (
 									<>
 										<TripPilotShowcase
@@ -225,8 +234,19 @@ export default function ProjectGallery() {
 											<TripPilotLogo />
 										</div>
 									</>
-								) : (
-									<h3>{projects[selected].name}</h3>
+								) : selected === 1 ? (
+                                    <>
+                                      <AnimalFeedShowcase trying={tryingStore} onTry={() => setTryingStore(true)} onReturn={() => setTryingStore(false)} />
+                                      {!tryingStore && <div className="trip-project-emblem animal-project-emblem"><AnimalFeedLogo /></div>}
+                                    </>
+                                ) : (
+									<div className="clinic-project-content">
+                                      <span className="clinic-project-status">En desarrollo</span>
+                                      <span className="clinic-project-eyebrow">Aplicación web</span>
+                                      <h3>Consultorio<br />dermatológico.</h3>
+                                      <p>Una experiencia digital para acompañar el día a día de un consultorio dermatológico.</p>
+                                      <span className="clinic-project-note">Próximamente, el producto y su proceso de diseño.</span>
+                                    </div>
 								)}
 								{paint && (
 									<span

@@ -61,7 +61,7 @@ export default function TripPilotShowcase({ active }: { active: boolean }) {
   return <div ref={container} className="trip-project-content trip-showcase" role="region" aria-label="Funciones de TripPilot" aria-roledescription="carrusel"
     onFocusCapture={() => setFocused(true)} onBlurCapture={event => { if (!event.currentTarget.contains(event.relatedTarget)) setFocused(false); }}>
     <div className="trip-project-copy">
-      <span className="trip-project-eyebrow">TripPilot · App iOS</span>
+      <div className="trip-project-eyebrow trip-project-identity"><span>TripPilot · App iOS</span><span className="trip-release-status">Próximamente en App Store</span></div>
       <div key={slide.image} className="trip-showcase-story" aria-live={playing ? "off" : "polite"}>
         <span className="trip-showcase-label">{slide.label}</span>
         <h3>{slide.title}</h3>

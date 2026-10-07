@@ -1,3 +1,6 @@
+import AboutSection from "@/components/AboutSection";
+import CareerJourney from "@/components/CareerJourney";
+import ContactSection from "@/components/ContactSection";
 import ProjectGallery from "@/components/ProjectGallery";
 import ScrollName from "@/components/ScrollName";
 import ParticlePortrait from "@/components/ParticlePortrait";
@@ -18,16 +21,9 @@ export default function Home() {
       <section id="proyectos" aria-labelledby="proyectos-heading">
         <ProjectGallery />
       </section>
-      <section id="sobre-mi" className="about" aria-labelledby="about-title"><h2 id="about-title">Sobre mí</h2><p>Me interesa cómo se ve una interfaz, cómo se usa y cómo está construida. Trabajo sobre esos detalles para convertir ideas en productos digitales claros y cuidados.</p>        <aside className="hero-timeline" aria-label="Trayectoria y disponibilidad">
-          <dl className="timeline-list">
-            <div><dt>2025 — Pres.</dt><dd>Desarrollador Frontend • Freelance</dd></div>
-            <div><dt>2024</dt><dd>Arquitectura UI • Design Systems</dd></div>
-            <div><dt>2023</dt><dd>Full Stack • TypeScript &amp; Next.js</dd></div>
-          </dl>
-          <p className="availability"><span aria-hidden="true" />Disponible para proyectos seleccionados</p>
-        </aside>
-</section>
-      <section id="contacto" className="contact" aria-labelledby="contact-title"><h2 id="contact-title">Construir en equipo.</h2><p>Busco un equipo donde aportar, aprender y construir productos con atención al detalle.</p></section>
+      <AboutSection />
+      <CareerJourney />
+      <ContactSection />
     </main>
     <footer className="container footer"><span>Rafael Vales</span><a href="#contenido">Volver arriba ↑</a></footer>
   </>;
