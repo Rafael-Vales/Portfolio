@@ -1,61 +1,65 @@
 "use client";
+import { useLocale } from "./LocaleProvider";
 
 import { useEffect, useRef, useState } from "react";
 import JourneyIdentity from "./JourneyIdentity";
 
 // Dates and roles come from Rafael's supplied CVs. Periods can overlap.
+
+
+export default function CareerJourney() {
+  const {t, cv}=useLocale();
 const chapters = [
   {
-    id: "formacion", year: "2023", period: "2023 — 2026", category: "Formación", name: "IDRA",
-    title: "Una base para construir.",
-    role: "Tecnicatura Superior en Desarrollo de Software · Instituto Superior IDRA",
-    description: "Tres años de formación centrada en C# y .NET. Programación orientada a objetos, arquitectura MVC y patrones de diseño aplicados a proyectos de escritorio.",
-    takeaway: "Una base que hoy llevo a mis proyectos web y mobile.",
+    id: "formacion", year: "2023", period: "2023 — 2026", category: t("Formación"), name: "IDRA",
+    title: t("Una base para construir."),
+    role: t("Tecnicatura Superior en Desarrollo de Software · Instituto Superior IDRA"),
+    description: t("Tres años de formación centrada en C# y .NET. Programación orientada a objetos, arquitectura MVC y patrones de diseño aplicados a proyectos de escritorio."),
+    takeaway: t("Una base que hoy llevo a mis proyectos web y mobile."),
     technologies: ["C#", ".NET", "Windows Forms", "SOLID"],
   },
   {
-    id: "dividamos", year: "2024", period: "Dic 2024 — Presente", category: "Proyecto propio", name: "Dividamos",
-    title: "De una cuenta compartida a una solución.",
-    role: "Aplicación de gastos compartidos",
-    description: "Una app en producción con usuarios reales. Organiza gastos compartidos y calcula cómo saldar las deudas con menos transferencias.",
-    takeaway: "Convertir una necesidad cotidiana en un producto que se usa.",
+    id: "dividamos", year: "2024", period: t("Dic 2024 — Presente"), category: t("Proyecto propio"), name: "Dividamos",
+    title: t("De una cuenta compartida a una solución."),
+    role: t("Aplicación de gastos compartidos"),
+    description: t("Una app en producción con usuarios reales. Organiza gastos compartidos y calcula cómo saldar las deudas con menos transferencias."),
+    takeaway: t("Convertir una necesidad cotidiana en un producto que se usa."),
     technologies: ["Next.js", "React", "TypeScript", "Supabase"],
   },
   {
-    id: "animal-feed", year: "2025", period: "Jun — Dic 2025", category: "Pasantía", name: "Animal Feed",
-    title: "Construir para un negocio real.",
-    role: "Desarrollador web · Los Abuelos Pet Shop",
-    description: "Desarrollé el ecommerce de punta a punta: catálogo, carrito, checkout y órdenes. Integré los pagos con MercadoPago y su procesamiento para evitar cobros duplicados.",
-    takeaway: "Del trabajo con el cliente a una tienda en producción.",
+    id: "animal-feed", year: "2025", period: t("Jun — Dic 2025"), category: t("Pasantía"), name: "Animal Feed",
+    title: t("Construir para un negocio real."),
+    role: t("Desarrollador web · Los Abuelos Pet Shop"),
+    description: t("Desarrollé el ecommerce de punta a punta: catálogo, carrito, checkout y órdenes. Integré los pagos con MercadoPago y su procesamiento para evitar cobros duplicados."),
+    takeaway: t("Del trabajo con el cliente a una tienda en producción."),
     technologies: ["Next.js", "TypeScript", "Prisma", "MercadoPago"],
   },
   {
-    id: "trippilot", year: "2025", period: "2025 — Presente", category: "Proyecto propio · En desarrollo", name: "TripPilot",
-    title: "Diseñar y construir una experiencia nativa.",
-    role: "Diseño y desarrollo · App iOS de planificación de viajes",
-    description: "Diseñé la aplicación y desarrollé su experiencia para iPhone. Itinerarios, mapas y lugares conectados para acompañar cada etapa del viaje.",
-    takeaway: "Una mirada de producto, desde la interfaz hasta su funcionamiento.",
+    id: "trippilot", year: "2025", period: t("2025 — Presente"), category: t("Proyecto propio · En desarrollo"), name: "TripPilot",
+    title: t("Diseñar y construir una experiencia nativa."),
+    role: t("Diseño y desarrollo · App iOS de planificación de viajes"),
+    description: t("Diseñé la aplicación y desarrollé su experiencia para iPhone. Itinerarios, mapas y lugares conectados para acompañar cada etapa del viaje."),
+    takeaway: t("Una mirada de producto, desde la interfaz hasta su funcionamiento."),
     technologies: ["Swift", "SwiftUI", "SwiftData", "MapKit"],
   },
   {
-    id: "mercado-williams", year: "2026", period: "2026 — Presente", category: "Proyecto para comercio", name: "Mercado Williams",
-    title: "Que el negocio siga funcionando.",
-    role: "Sistema de punto de venta",
-    description: "Construí un punto de venta para un comercio real con tres cajas simultáneas. Guarda las ventas localmente y las sincroniza al recuperar la conexión.",
-    takeaway: "Diseñar también para cuando las condiciones no son ideales.",
+    id: "mercado-williams", year: "2026", period: t("2026 — Presente"), category: t("Proyecto para comercio"), name: "Mercado Williams",
+    title: t("Que el negocio siga funcionando."),
+    role: t("Sistema de punto de venta"),
+    description: t("Construí un punto de venta para un comercio real con tres cajas simultáneas. Guarda las ventas localmente y las sincroniza al recuperar la conexión."),
+    takeaway: t("Diseñar también para cuando las condiciones no son ideales."),
     technologies: ["Next.js", "TypeScript", "Supabase", "Dexie.js"],
   },
   {
-    id: "consultorio", year: "2026", period: "2026 — Presente", category: "En desarrollo", name: "Consultorio",
-    title: "Construir en equipo.",
-    role: "Tech Lead · Consultorio dermatológico",
-    description: "Lidero técnicamente un equipo de cuatro personas. Trabajo con la clienta para definir las necesidades del consultorio y llevarlas al diseño del sistema.",
-    takeaway: "Conectar las necesidades del cliente con las decisiones del equipo.",
-    technologies: ["Next.js", "TypeScript", "Prisma", "Scrum / Jira"],
+    id: "consultorio", year: "2026", period: t("2026 — Presente"), category: t("En desarrollo"), name: t("Consultorio"),
+    title: t("Construir en equipo."),
+    role: t("Tech Lead · Consultorio dermatológico"),
+    description: t("Lidero técnicamente un equipo de cuatro personas en un sistema para un consultorio real. Participo del relevamiento con la clienta y del modelo de datos para conectar turnos, señas y atención clínica. El producto sigue en desarrollo.", "I lead a four-person technical team building a system for a real clinic. I contribute to client requirements and the data model connecting appointments, deposits and clinical care. The product is still in development."),
+    takeaway: t("Traducir un proceso real en reglas de negocio, permisos y decisiones compartidas.", "Translating a real workflow into business rules, permissions and shared decisions."),
+    technologies: ["Next.js", "TypeScript", "Prisma", "Supabase", "Scrum / Jira"],
   },
 ];
 
-export default function CareerJourney() {
   const section = useRef<HTMLElement>(null);
   const track = useRef<HTMLOListElement>(null);
   const markers = useRef<(HTMLSpanElement | null)[]>([]);
@@ -102,19 +106,19 @@ export default function CareerJourney() {
 
   return <section id="recorrido" ref={section} className="career-journey" aria-labelledby="journey-title">
     <div className="journey-introduction">
-      <span className="journey-eyebrow">Mi recorrido</span>
+      <span className="journey-eyebrow">{t("Mi recorrido")}</span>
       <JourneyIdentity />
-      <nav className="journey-navigation" aria-label="Etapas de mi recorrido">
+      <nav className="journey-navigation" aria-label={t("Etapas de mi recorrido")}>
         {chapters.map((chapter, index) => <a key={chapter.id} href={`#recorrido-${chapter.id}`} aria-current={active === index ? "step" : undefined}>
           <span>{chapter.year}</span><span>{chapter.name}</span><span className="journey-nav-arrow" aria-hidden="true">↗</span>
         </a>)}
       </nav>
-      <a className="journey-cv-link" href="/documents/CV_Rafael_Vales.pdf" target="_blank" rel="noopener noreferrer" aria-label="Ver mi CV (PDF, se abre en una pestaña nueva)">
+      <a className="journey-cv-link" href={cv} target="_blank" rel="noopener noreferrer" aria-label={t("Ver mi CV (PDF, se abre en una pestaña nueva)")}>
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
           <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
           <path d="M14 2v6h6M8 13h8M8 17h5" />
         </svg>
-        <span>Ver mi CV</span><span className="journey-cv-arrow" aria-hidden="true">↗</span>
+        <span>{t("Ver mi CV")}</span><span className="journey-cv-arrow" aria-hidden="true">↗</span>
       </a>
     </div>
     <ol ref={track} className="journey-track">
@@ -124,7 +128,7 @@ export default function CareerJourney() {
         <h3>{chapter.title}</h3>
         <p className="journey-role">{chapter.role}</p>
         <p className="journey-description">{chapter.description}</p>
-        <ul className="journey-technologies" aria-label="Tecnologías y prácticas">{chapter.technologies.map(technology => <li key={technology}>{technology}</li>)}</ul>
+        <ul className="journey-technologies" aria-label={t("Tecnologías y prácticas")}>{chapter.technologies.map(technology => <li key={technology}>{technology}</li>)}</ul>
         <p className="journey-takeaway"><span aria-hidden="true">↳</span>{chapter.takeaway}</p>
       </li>)}
     </ol>

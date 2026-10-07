@@ -3,19 +3,49 @@
 import AnimalFeedLogo from "./AnimalFeedLogo";
 import AnimalFeedShowcase from "./AnimalFeedShowcase";
 import TripPilotShowcase from "./TripPilotShowcase";
-import { createPortal } from "react-dom";
+import { createPortal, flushSync } from "react-dom";
+import ProjectBack from "./ProjectBack";
+import { useLocale } from "./LocaleProvider";
 import TripPilotLogo from "./TripPilotLogo";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 
+
+
+const slugs = ["trippilot", "animal-feed", "consultorio"];
+export default function ProjectGallery({ initialProject }: { initialProject?: string }) {
+ const {t,locale}=useLocale();
 const projects = [
 	{ name: "TripPilot", style: "trip" },
 	{ name: "Animal Feed", style: "shop" },
-	{ name: "Consultorio dermatológico", style: "clinic" },
+	{ name: t("Consultorio dermatológico"), style: "clinic" },
 ];
 
-export default function ProjectGallery() {
-	const [selected, setSelected] = useState<number | null>(null);
-	const [colored, setColored] = useState(false);
+
+  const initial = slugs.indexOf(initialProject ?? "");
+  const [selected, setSelected] = useState<number | null>(initial < 0 ? null : initial);
+  const [colored, setColored] = useState(initial >= 0);
+  const [flipped, setFlipped] = useState(false);
+  const flipReturn = useRef<HTMLButtonElement>(null);
+  const flipOpen = useRef<HTMLButtonElement>(null);
+  const flipChanged = useRef(false);
+  const [shared, setShared] = useState(false);
+  const [shareFailed, setShareFailed] = useState(false);
+  const transitioning = useRef(false);
+  useEffect(() => {
+    const name = selected === null ? (locale === "en" ? "Fullstack developer" : "Desarrollador fullstack") : ["TripPilot", "Animal Feed", locale === "en" ? "Dermatology clinic" : "Consultorio dermatológico"][selected];
+    document.title = selected === null ? `Rafael Vales — ${name}` : `${name} — Rafael Vales`;
+  }, [selected, locale]);
+  const shareTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => () => { if (shareTimer.current) clearTimeout(shareTimer.current); }, []);
+  useLayoutEffect(() => {
+    if (flipChanged.current) { (flipped ? flipReturn : flipOpen).current?.focus({preventScroll:true}); flipChanged.current=false; }
+  },[flipped]);
+  function flip(value:boolean) { flipChanged.current=true;setFlipped(value); }
+  async function share() {
+    setShareFailed(false);
+    try { await navigator.clipboard.writeText(window.location.href); setShared(true); if(shareTimer.current)clearTimeout(shareTimer.current);shareTimer.current=setTimeout(()=>setShared(false),2500); }
+    catch { setShared(false);setShareFailed(true); }
+  }
   const [tryingStore, setTryingStore] = useState(false);
 	useLayoutEffect(() => {
 		if (!colored) delete document.documentElement.dataset.projectTheme;
@@ -28,6 +58,7 @@ export default function ProjectGallery() {
 			delete document.documentElement.dataset.projectTheme;
 		};
 	}, [selected, colored]);
+
 	const triggers = useRef<(HTMLButtonElement | null)[]>([]);
 	const back = useRef<HTMLButtonElement>(null);
 	const origin = useRef(0);
@@ -52,6 +83,15 @@ export default function ProjectGallery() {
 	}, [paint]);
 	const [leaving, setLeaving] = useState(false);
 	const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => {
+    function restore() {
+      if(timer.current){clearTimeout(timer.current);timer.current=null;}
+      const next=slugs.indexOf(new URL(window.location.href).searchParams.get("project") ?? "");
+      setSelected(next<0?null:next);setColored(next>=0);setPaint(null);setLeaving(false);setTryingStore(false);setFlipped(false);
+    }
+    window.addEventListener("popstate",restore);
+    return ()=>window.removeEventListener("popstate",restore);
+  },[]);
 	useEffect(
 		() => () => {
 			if (timer.current) clearTimeout(timer.current);
@@ -59,42 +99,37 @@ export default function ProjectGallery() {
 		},
 		[],
 	);
-	function transition(next: number | null) {
-		if (timer.current) return;
-		const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
-		const color = next === 0 ? "#2a7d6b" : next === 1 ? "#0b1d4d" : null;
-		const painting = Boolean(color && !reduced);
-		setLeaving(true);
-		timer.current = setTimeout(
-			() => {
-				restoreFocus.current = true;
-				setColored(!painting);
-				setSelected(next);
-                setTryingStore(false);
-				setLeaving(false);
-				if (painting) {
-					timer.current = setTimeout(() => {
-						setPaint({ color: color!, reveal: false });
-						timer.current = setTimeout(() => {
-							setColored(true);
-							setPaint({ color: color!, reveal: true });
-							timer.current = setTimeout(() => {
-								setPaint(null);
-								timer.current = null;
-							}, 100);
-						}, 1100);
-					}, 1000);
-				} else timer.current = null;
-			},
-			reduced ? 0 : 420,
-		);
-	}
+  function transition(next: number | null) {
+    if (timer.current || transitioning.current) return;
+    transitioning.current = true;
+    const reduced=matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const color=next===0?"#2a7d6b":next===1?"#0b1d4d":null;
+    const painting=Boolean(color&&!reduced);
+    const card = selected===null && next!==null ? triggers.current[next]?.closest<HTMLElement>("article") : null;
+    if(card){card.style.viewTransitionName="project-panel";const mark=card.querySelector<HTMLElement>(".trip-card-logo, .animal-logo");if(mark)mark.style.viewTransitionName="project-mark";}
+    const update=()=>{
+      restoreFocus.current=true;
+      flushSync(()=>{setSelected(next);setColored(!painting);setFlipped(false);setTryingStore(false);setLeaving(false);setShared(false);});
+      const url=new URL(window.location.href);
+      if(next===null)url.searchParams.delete("project");else url.searchParams.set("project",slugs[next]);
+      url.hash="proyectos";window.history.pushState({},"",url);
+      if(painting){timer.current=setTimeout(()=>{
+        setPaint({color:color!,reveal:false});
+        timer.current=setTimeout(()=>{setColored(true);setPaint(null);timer.current=null;},650);
+      },220);}else timer.current=null;
+    };
+    if(!reduced && document.startViewTransition) {
+      const view=document.startViewTransition(update);
+      void view.finished.catch(()=>{}).finally(()=>{transitioning.current=false;});
+    } else { update();transitioning.current=false; }
+  }
 
 	function open(index: number) {
 		origin.current = index;
 		transition(index);
 	}
 	function close() {
+        if (flipped) { flip(false); return; }
         if (tryingStore) { setTryingStore(false); return; }
 		transition(null);
 	}
@@ -117,6 +152,7 @@ export default function ProjectGallery() {
 					event.preventDefault();
 					close();
 				}
+				if (event.target instanceof Element && event.target.closest(".trip-showcase, .project-back-content")) return;
 				if (!tryingStore && event.key === "ArrowLeft") {
 					event.preventDefault();
 					step(-1);
@@ -141,20 +177,14 @@ export default function ProjectGallery() {
 					id="proyectos-heading"
 					className={
 						selected !== null ? "project-heading-hidden" : undefined
-					}>
-					Proyectos
-				</h2>
+					}>{t("Proyectos")}</h2>
 				{selected !== null && (
 					<>
 						<button
 							ref={back}
 							onClick={close}
-							aria-label={tryingStore ? "Volver al proyecto" : "Volver a la galería"}>
-							← Volver
-						</button>
-						<span>
-							{String(selected + 1).padStart(2, "0")} / 03
-						</span>
+							aria-label={flipped || tryingStore ? t("Volver al proyecto") : t("Volver a la galería")}>{t("← Volver")}</button>
+                        <div className="project-toolbar-actions"><button type="button" onClick={share}>{shared?t("Enlace copiado","Link copied"):t("Copiar enlace","Copy link")}</button><span>{String(selected+1).padStart(2,"0")} / 03</span><span role="status" className="sr-only">{shared?t("Enlace copiado","Link copied"):shareFailed?t("No se pudo copiar. Podés copiar la dirección del navegador.","Could not copy. You can copy the address from your browser."):""}</span></div>
 					</>
 				)}
 			</div>
@@ -167,9 +197,7 @@ export default function ProjectGallery() {
 								className={`project-name-card project-name-card--${project.style}`}>
 								{index === 0 && (
 									<>
-										<span className="trip-card-category">
-											App iOS
-										</span>
+										<span className="trip-card-category">{t("App iOS")}</span>
 										<TripPilotLogo />
 									</>
 								)}
@@ -179,27 +207,23 @@ export default function ProjectGallery() {
                                 </>}
 								{index === 0 ? <div className="trip-card-heading">
                                   <h3>{project.name}</h3>
-                                  <span className="trip-release-status">Próximamente en App Store</span>
+                                  <span className="trip-release-status">{t("Próximamente en App Store")}</span>
                                 </div> : <h3>{project.name}</h3>}
                                 <button
                                   className="project-card-trigger"
                                   ref={element => { triggers.current[index] = element; }}
                                   onClick={() => open(index)}
-                                  aria-label={`Abrir ${project.name}`}
+                                  aria-label={`${t("Abrir", "Open")} ${project.name}`}
                                 />
 								{index === 0 && (
 									<div className="trip-card-footer">
-										<p>
-											Tu viaje, de la idea
-											<br />
-											al itinerario.
-										</p>
+										<p>{t("Tu viaje, de la idea")}<br />{t("al itinerario.")}</p>
 										<span aria-hidden="true">↗</span>
 									</div>
 								)}
-                                {index === 2 && <span className="clinic-card-status">En desarrollo</span>}
+                                {index === 2 && <span className="clinic-card-status">{t("En desarrollo")}</span>}
                                 {index === 1 && <div className="animal-card-footer">
-                                  <p>Alimentos y accesorios<br />para tu mascota.</p>
+                                  <p>{t("Alimentos y accesorios")}<br />{t("para tu mascota.")}</p>
                                   <span aria-hidden="true">↗</span>
                                 </div>}
 							</article>
@@ -208,12 +232,12 @@ export default function ProjectGallery() {
 				) : (
 					<section
 						className="project-expanded"
-						aria-label="Proyecto seleccionado">
+						aria-label={t("Proyecto seleccionado")}>
 						<div className="project-expanded-stage">
 							<button
 								className="project-arrow"
 								onClick={() => step(-1)}
-								aria-label="Proyecto anterior">
+								aria-label={t("Proyecto anterior")}>
 								<svg viewBox="0 0 24 48" aria-hidden="true">
 									<path d="M21 3 3 24l18 21" />
 								</svg>
@@ -221,33 +245,46 @@ export default function ProjectGallery() {
 							<div
 								key={selected}
 								className={`project-expanded-cover project-expanded-cover--${projects[selected].style}`}
-								aria-live={selected === 2 ? "polite" : "off"}
-								aria-atomic={selected === 2 ? true : undefined}>
+                                data-flipped={flipped}
+                                style={{viewTransitionName:"project-panel"}}>
+                                <div className="project-front" inert={flipped} aria-hidden={flipped}>
 								{selected === 0 ? (
 									<>
 										<TripPilotShowcase
 											active={
-												colored && !paint && !leaving
+												colored && !paint && !leaving && !flipped
 											}
 										/>
-										<div className="trip-project-emblem">
+										<div className="trip-project-emblem" style={{viewTransitionName:"project-mark"}}>
 											<TripPilotLogo />
 										</div>
 									</>
 								) : selected === 1 ? (
                                     <>
                                       <AnimalFeedShowcase trying={tryingStore} onTry={() => setTryingStore(true)} onReturn={() => setTryingStore(false)} />
-                                      {!tryingStore && <div className="trip-project-emblem animal-project-emblem"><AnimalFeedLogo /></div>}
+                                      {!tryingStore && <div className="trip-project-emblem animal-project-emblem" style={{viewTransitionName:"project-mark"}}><AnimalFeedLogo /></div>}
                                     </>
                                 ) : (
 									<div className="clinic-project-content">
-                                      <span className="clinic-project-status">En desarrollo</span>
-                                      <span className="clinic-project-eyebrow">Aplicación web</span>
-                                      <h3>Consultorio<br />dermatológico.</h3>
-                                      <p>Una experiencia digital para acompañar el día a día de un consultorio dermatológico.</p>
-                                      <span className="clinic-project-note">Próximamente, el producto y su proceso de diseño.</span>
+                                      <span className="clinic-project-status">{t("En desarrollo")}</span>
+                                      <span className="clinic-project-eyebrow">{t("Gestión clínica · Una necesidad real", "Clinic management · A real need")}</span>
+                                      <h3>{t("Consultorio")}<br />{t("dermatológico.")}</h3>
+                                      <p>{t("De coordinar turnos y señas por WhatsApp a diseñar un sistema que conecte recepción, agenda y seguimiento clínico.", "From coordinating appointments and deposits over WhatsApp to designing a system that connects reception, scheduling and clinical follow-up.")}</p>
+                                      <ul className="clinic-project-scope" aria-label={t("Alcance del proyecto", "Project scope")}>
+                                        <li>{t("Turnos y señas", "Appointments & deposits")}</li>
+                                        <li>{t("Recepción y atención", "Reception & consultations")}</li>
+                                        <li>{t("Historia clínica e imágenes", "Medical records & images")}</li>
+                                      </ul>
+                                      <span className="clinic-project-note">{t("Tech Lead · Equipo de cuatro personas","Tech Lead · Four-person team")}</span>
+                                      <small className="clinic-project-stage">{t("Desarrollo por etapas · Demostraciones con datos ficticios", "Incremental development · Demonstrations with fictional data")}</small>
                                     </div>
 								)}
+                                {!tryingStore && <button ref={flipOpen} type="button" className="project-flip-trigger" onClick={()=>flip(true)}>{t("Cómo lo construí","How I built it")} <span aria-hidden="true">↻</span></button>}
+                                </div>
+                                <div className="project-back" inert={!flipped} aria-hidden={!flipped}>
+                                  <ProjectBack index={selected} />
+                                  <button ref={flipReturn} type="button" className="project-flip-trigger" onClick={()=>flip(false)}>{t("Volver al producto","Back to the product")} <span aria-hidden="true">↶</span></button>
+                                </div>
 								{paint && (
 									<span
 										className="project-panel-paint"
@@ -264,7 +301,7 @@ export default function ProjectGallery() {
 							<button
 								className="project-arrow"
 								onClick={() => step(1)}
-								aria-label="Proyecto siguiente">
+								aria-label={t("Proyecto siguiente")}>
 								<svg viewBox="0 0 24 48" aria-hidden="true">
 									<path d="m3 3 18 21L3 45" />
 								</svg>

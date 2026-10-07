@@ -1,22 +1,26 @@
 "use client";
+import { useLocale } from "./LocaleProvider";
 
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 
 type Slide = { image: string; label: string; title: string; text: string; alt: string; video?: string };
 
-const slides: Slide[] = [
-  { image: "home", label: "Inicio", title: "Tu día, de un vistazo.", text: "La próxima actividad, tu alojamiento y los pendientes del viaje. Lo que necesitás para empezar el día.", alt: "Inicio de TripPilot en Lisboa con próxima actividad, alojamiento y tareas pendientes" },
-  { image: "itinerary", label: "Itinerario", title: "Cada parada, en su lugar.", text: "Organizá las actividades de cada día, cambiá su orden y consultá los tiempos entre una parada y otra.", alt: "Itinerario de Lisboa con selector de días, actividades y controles para reordenar" },
-  { image: "discover", label: "Recomendaciones", title: "Descubrí qué hay cerca.", text: "Explorá las sugerencias de la ciudad en el mapa. Encontrá museos, parques y lugares para sumar a tu viaje.", alt: "Mapa de recomendaciones en Lisboa con lugares de distintas categorías" },
-  { image: "saved", label: "Guardados", title: "Tus lugares, siempre a mano.", text: "Reuní los lugares que querés conocer y ubicá en el mapa cuáles te quedan pendientes y cuáles ya visitaste.", alt: "Mapa de lugares guardados con filtros de pendientes y visitados" },
-  { image: "route", label: "Ruta", title: "El recorrido completo.", text: "Visualizá el orden de las paradas, la distancia y el tiempo estimado. Compará el recorrido a pie, en coche o en transporte público.", alt: "Ruta por cuatro lugares de Lisboa con distancia, tiempo y opciones de transporte" },
-  { image: "discover-video", video: "discover", label: "Del lugar al plan", title: "De descubrirlo a visitarlo.", text: "Explorá recomendaciones, guardá un lugar y sumalo a tu plan. Elegí el día en el que querés conocerlo.", alt: "Demostración de cómo guardar un museo y elegir su día de visita" },
-  { image: "expenses-video", video: "expenses", label: "Gasto rápido", title: "Un gasto, en segundos.", text: "Ingresá el monto, elegí una categoría y guardá. El total de tu viaje se actualiza en el inicio.", alt: "Demostración de un gasto de 25 dólares y su total actualizado" },
-  { image: "widgets", label: "Widgets", title: "Tu viaje, más a mano.", text: "Consultá tu próxima actividad y el gasto acumulado desde la pantalla de inicio. Con accesos a gastos, lugares y mapa.", alt: "Widgets de TripPilot con próxima actividad, total gastado y accesos rápidos" },
-];
+
 
 export default function TripPilotShowcase({ active }: { active: boolean }) {
+  const {t}=useLocale();
+const slides: Slide[] = [
+  { image: "home", label: t("Inicio"), title: t("Tu día, de un vistazo."), text: t("La próxima actividad, tu alojamiento y los pendientes del viaje. Lo que necesitás para empezar el día."), alt: t("Inicio de TripPilot en Lisboa con próxima actividad, alojamiento y tareas pendientes") },
+  { image: "itinerary", label: t("Itinerario"), title: t("Cada parada, en su lugar."), text: t("Organizá las actividades de cada día, cambiá su orden y consultá los tiempos entre una parada y otra."), alt: t("Itinerario de Lisboa con selector de días, actividades y controles para reordenar") },
+  { image: "discover", label: t("Recomendaciones"), title: t("Descubrí qué hay cerca."), text: t("Explorá las sugerencias de la ciudad en el mapa. Encontrá museos, parques y lugares para sumar a tu viaje."), alt: t("Mapa de recomendaciones en Lisboa con lugares de distintas categorías") },
+  { image: "saved", label: t("Guardados"), title: t("Tus lugares, siempre a mano."), text: t("Reuní los lugares que querés conocer y ubicá en el mapa cuáles te quedan pendientes y cuáles ya visitaste."), alt: t("Mapa de lugares guardados con filtros de pendientes y visitados") },
+  { image: "route", label: t("Ruta"), title: t("El recorrido completo."), text: t("Visualizá el orden de las paradas, la distancia y el tiempo estimado. Compará el recorrido a pie, en coche o en transporte público."), alt: t("Ruta por cuatro lugares de Lisboa con distancia, tiempo y opciones de transporte") },
+  { image: "discover-video", video: "discover", label: t("Del lugar al plan"), title: t("De descubrirlo a visitarlo."), text: t("Explorá recomendaciones, guardá un lugar y sumalo a tu plan. Elegí el día en el que querés conocerlo."), alt: t("Demostración de cómo guardar un museo y elegir su día de visita") },
+  { image: "expenses-video", video: "expenses", label: t("Gasto rápido"), title: t("Un gasto, en segundos."), text: t("Ingresá el monto, elegí una categoría y guardá. El total de tu viaje se actualiza en el inicio."), alt: t("Demostración de un gasto de 25 dólares y su total actualizado") },
+  { image: "widgets", label: "Widgets", title: t("Tu viaje, más a mano."), text: t("Consultá tu próxima actividad y el gasto acumulado desde la pantalla de inicio. Con accesos a gastos, lugares y mapa."), alt: t("Widgets de TripPilot con próxima actividad, total gastado y accesos rápidos") },
+];
+
   const [index, setIndex] = useState(0);
   const [paused, setPaused] = useState(false);
   const [reduced, setReduced] = useState(false);
@@ -49,7 +53,7 @@ export default function TripPilotShowcase({ active }: { active: boolean }) {
       if (!document.hidden) setIndex(value => (value + 1) % slides.length);
     }, 5000);
     return () => clearInterval(timer);
-  }, [playing, index, slide.video]);
+  }, [playing, index, slide.video, slides.length]);
   useEffect(() => {
     const element = video.current;
     if (!element) return;
@@ -58,23 +62,23 @@ export default function TripPilotShowcase({ active }: { active: boolean }) {
       void element.play().catch(() => { /* Native controls remain available if autoplay is blocked. */ });
     } else element.pause();
   }, [playing, index]);
-  return <div ref={container} className="trip-project-content trip-showcase" role="region" aria-label="Funciones de TripPilot" aria-roledescription="carrusel"
+  return <div ref={container} className="trip-project-content trip-showcase" role="region" aria-label={t("Funciones de TripPilot")} aria-roledescription={t("carrusel", "carousel")}
     onFocusCapture={() => setFocused(true)} onBlurCapture={event => { if (!event.currentTarget.contains(event.relatedTarget)) setFocused(false); }}>
     <div className="trip-project-copy">
-      <div className="trip-project-eyebrow trip-project-identity"><span>TripPilot · App iOS</span><span className="trip-release-status">Próximamente en App Store</span></div>
+      <div className="trip-project-eyebrow trip-project-identity"><span>{t("TripPilot · App iOS")}</span><span className="trip-release-status">{t("Próximamente en App Store")}</span></div>
       <div key={slide.image} className="trip-showcase-story" aria-live={playing ? "off" : "polite"}>
         <span className="trip-showcase-label">{slide.label}</span>
         <h3>{slide.title}</h3>
         <p>{slide.text}</p>
       </div>
       <div className="trip-showcase-controls">
-        <div className="trip-showcase-dots" aria-label="Elegir pantalla">
-          {slides.map((item, i) => <button key={item.image} type="button" aria-label={`Mostrar ${item.label}`} aria-current={i === index ? "true" : undefined} onClick={() => setIndex(i)}><span /></button>)}
+        <div className="trip-showcase-dots" aria-label={t("Elegir pantalla")}>
+          {slides.map((item, i) => <button key={item.image} type="button" aria-label={`${t("Mostrar", "Show")} ${item.label}`} aria-current={i === index ? "true" : undefined} onClick={() => setIndex(i)}><span /></button>)}
         </div>
-        {!reduced && <button type="button" className="trip-showcase-pause" onClick={() => setPaused(value => !value)} aria-label={paused ? "Reanudar presentación" : "Pausar presentación"}>{paused ? "Reanudar" : "Pausar"}</button>}
+        {!reduced && <button type="button" className="trip-showcase-pause" onClick={() => setPaused(value => !value)} aria-label={paused ? t("Reanudar presentación") : t("Pausar presentación")}>{paused ? t("Reanudar") : t("Pausar")}</button>}
         <span className="trip-showcase-count">{String(index + 1).padStart(2, "0")} / {String(slides.length).padStart(2, "0")}</span>
       </div>
-      <span className="trip-project-role">Diseñado y desarrollado por mí.</span>
+      <span className="trip-project-role">{t("Diseñado y desarrollado por mí.")}</span>
     </div>
     <div className="trip-showcase-phone">
       {slides.map((item, i) => <div key={item.image} className="trip-showcase-frame" data-current={i === index} aria-hidden={i !== index}>

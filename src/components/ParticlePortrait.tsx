@@ -1,10 +1,12 @@
 "use client";
+import { useLocale } from "./LocaleProvider";
 
 import { useEffect, useRef, useState } from "react";
 
-type Dot = { x: number; y: number; tx: number; ty: number; nx: number; ny: number; vx: number; vy: number; r: number; lx: number; ly: number; logoTone: number; logoV: boolean; bx: number; by: number; delay: number; bend: number };
+type Dot = { x: number; y: number; tx: number; ty: number; nx: number; ny: number; vx: number; vy: number; r: number; lx: number; ly: number; logoTone: number; logoV: boolean; bx: number; by: number; delay: number; bend: number; nightX: number; nightY: number; nightR: number };
 
 export default function ParticlePortrait() {
+  const {t}=useLocale();
   const ref = useRef<HTMLCanvasElement>(null);
   const pausedRef = useRef(false);
   const [paused, setPaused] = useState(false);
@@ -18,7 +20,22 @@ export default function ParticlePortrait() {
     const stage = canvas.parentElement!;
     const hero = canvas.closest<HTMLElement>(".hero")!;
     let dots: Dot[] = [];
-    let flowTime = 0, cycleTime = 0;
+    // Reuse numeric buffers instead of allocating large native Path2D objects
+    // every frame. Canvas owns and resets the drawing path for each color.
+    let dotBuffers = [new Float64Array(0), new Float64Array(0), new Float64Array(0)];
+    const dotCounts = [0, 0, 0];
+    function fillDots(group: number, color: string) {
+      const buffer = dotBuffers[group];
+      ctx!.beginPath();
+      for (let i = 0; i < dotCounts[group]; i += 3) {
+        const x = buffer[i], y = buffer[i + 1], radius = buffer[i + 2];
+        ctx!.moveTo(x + radius, y);
+        ctx!.arc(x, y, radius, 0, Math.PI * 2);
+      }
+      ctx!.fillStyle = color;
+      ctx!.fill();
+    }
+    let flowTime = 0, cycleTime = 0, themeRepaintUntil = 0;
     let returning = false;
     const smooth = (v: number) => { const t = Math.max(0, Math.min(1, v)); return t * t * (3 - 2 * t); };
     const pointer = { x: -1000, y: -1000 };
@@ -141,7 +158,7 @@ export default function ParticlePortrait() {
       }
       if (!loaded) {
         ctx!.clearRect(0, 0, width, height);
-        ctx!.globalAlpha = .65; ctx!.fillStyle = "#151515";
+        ctx!.globalAlpha = .65; ctx!.fillStyle = getComputedStyle(document.body).getPropertyValue("--portrait-ink").trim() || "#151515";
         ctx!.beginPath();
         for (let i = 0; i < loaderCount; i++) {
           const p = loaderPoint(i);
@@ -163,23 +180,16 @@ export default function ParticlePortrait() {
       canvas!.dataset.phase = intro ? (formation > 0 ? "opening-portrait" : "loading") : onFloor ? "floor-hold" : phase < 6 ? "portrait" : phase < 8 ? "fall-to-logo" : phase < 10 ? "form-logo" : phase < 16 ? "logo" : phase < 18 ? "fall-to-portrait" : "form-portrait";
       ctx!.clearRect(0, 0, width, height);
       const pageStyle = getComputedStyle(document.body);
-      const backgroundChannels = pageStyle.backgroundColor.match(/[\d.]+/g)?.slice(0, 3).join(",") ?? "250,250,249";
-      if (progress > 0) {
-        const veil = ctx!.createLinearGradient(0, 0, 0, 160);
-        veil.addColorStop(0, pageStyle.backgroundColor);
-        veil.addColorStop(.28, `rgba(${backgroundChannels},.96)`);
-        veil.addColorStop(.55, `rgba(${backgroundChannels},.68)`);
-        veil.addColorStop(.8, `rgba(${backgroundChannels},.18)`);
-        veil.addColorStop(1, `rgba(${backgroundChannels},0)`);
-        ctx!.globalAlpha = progress;
-        ctx!.fillStyle = veil;
-        ctx!.fillRect(0, 0, width, 160);
-      }
-      const baseInk = pageStyle.getPropertyValue("--particle-ink").trim() || "#151515";
+      const baseInk = pageStyle.getPropertyValue("--particle-ink").trim() || pageStyle.getPropertyValue("--portrait-ink").trim() || "#151515";
       const logoColorBlend = (phase < 8 ? 0 : phase < 10 ? smooth((phase - 8) / 2) : phase < 16 ? 1 : phase < 18 ? 1 - smooth((phase - 16) / 2) : 0) * (1 - progress);
-      const greenInk = [107, 136, 118].map(value => Math.round(21 + (value - 21) * logoColorBlend));
+      const portraitTone = root.dataset.theme === "dark" ? 220 : 21;
+      const greenInk = [107, 136, 118].map(value => Math.round(portraitTone + (value - portraitTone) * logoColorBlend));
       const veeInk = pageStyle.getPropertyValue("--particle-ink").trim() || `rgb(${greenInk.join(",")})`;
-      const frontDots = new Path2D(), veeDots = new Path2D(), loaderAccent = new Path2D();
+      // White particles describe reflected light on a dark page, not the photo's shadows.
+      const darkPortrait = root.dataset.theme === "dark" && !root.dataset.projectTheme;
+      const logoBlend = phase < 8 ? 0 : phase < 10 ? smooth((phase - 8) / 2) : phase < 16 ? 1 : phase < 18 ? 1 - smooth((phase - 16) / 2) : 0;
+      const nightRadiusBlend = darkPortrait ? (1 - logoBlend) * (1 - progress) * (intro ? smooth(formation) : 1) : 0;
+      dotCounts.fill(0);
       const settle = Math.max(0, Math.min(1, (progress - .65) / .35));
       const navbarFade = settle * settle * (3 - 2 * settle);
       ctx!.globalAlpha = (1 - progress * .18) * (1 - navbarFade * .58);
@@ -190,7 +200,9 @@ export default function ParticlePortrait() {
         const flow = motion.matches ? 0 : progress;
         const driftX = Math.sin(flowTime * .38 + p.nx * .004 + p.ny * .035) * 22 * flow;
         const driftY = Math.sin(flowTime * .55 + p.nx * .009) * 4.5 * flow;
-        let hx = p.tx, hy = p.ty;
+        const portraitX = darkPortrait ? p.nightX : p.tx;
+        const portraitY = darkPortrait ? p.nightY : p.ty;
+        let hx = portraitX, hy = portraitY;
         if (phase >= 6 && phase < 8) {
           const t = Math.max(0, Math.min(1, (phase - 6 - p.delay) / (2 - p.delay)));
           const landing = Math.min(1, t / .78);
@@ -213,14 +225,14 @@ export default function ParticlePortrait() {
           hy -= Math.sin(Math.max(0, (t - .78) / .22) * Math.PI) * 15;
         } else if (phase >= 18) {
           const t = smooth((phase - 18) / 2);
-          hx = p.bx + (p.tx - p.bx) * t + Math.sin(t * Math.PI) * p.bend;
-          hy = p.by + (p.ty - p.by) * t;
+          hx = p.bx + (portraitX - p.bx) * t + Math.sin(t * Math.PI) * p.bend;
+          hy = p.by + (portraitY - p.by) * t;
         }
         if (intro) {
           const origin = loaderPoint(index);
           const t = smooth(formation);
-          hx = origin.x + (p.tx - origin.x) * t + Math.sin(t * Math.PI) * p.bend * .35;
-          hy = origin.y + (p.ty - origin.y) * t;
+          hx = origin.x + (portraitX - origin.x) * t + Math.sin(t * Math.PI) * p.bend * .35;
+          hy = origin.y + (portraitY - origin.y) * t;
         }
         const tx = hx + (p.nx + driftX - hx) * progress;
         const ty = hy + (p.ny + driftY - hy) * progress;
@@ -248,20 +260,23 @@ export default function ParticlePortrait() {
         }
         // Keep the travelling cloud substantial, then settle into a darker fine texture.
         const transitionBoost = Math.sin(progress * Math.PI) * .22;
-        const logoBlend = phase < 8 ? 0 : phase < 10 ? smooth((phase - 8) / 2) : phase < 16 ? 1 : phase < 18 ? 1 - smooth((phase - 16) / 2) : 0;
         const tone = 1 + (p.logoTone - 1) * logoBlend * (1 - progress);
-        const radius = (intro ? (loaderRadius(index) + (p.r - loaderRadius(index)) * smooth(formation)) : p.r) * tone * (1 - progress * .14 + transitionBoost) * (1 - progress * (1 - clearance));
+        const portraitRadius = p.r + (p.nightR - p.r) * nightRadiusBlend;
+        const radius = (intro ? (loaderRadius(index) + (portraitRadius - loaderRadius(index)) * smooth(formation)) : portraitRadius) * tone * (1 - progress * .14 + transitionBoost) * (1 - progress * (1 - clearance));
         if (radius < .025) continue;
         const seed = loaderSeeds[index % loaderCount];
         const accent = intro && formation < .45 && seed.depth < 7 && Math.abs(seed.u - (introTime * .32 % 1.3)) < .12;
-        const dotPath = accent ? loaderAccent : p.logoV ? veeDots : frontDots;
-        dotPath.moveTo(p.x + radius, p.y);
-        dotPath.arc(p.x, p.y, radius, 0, Math.PI * 2);
+        const group = accent ? 2 : p.logoV ? 1 : 0;
+        const offset = dotCounts[group];
+        dotBuffers[group][offset] = p.x;
+        dotBuffers[group][offset + 1] = p.y;
+        dotBuffers[group][offset + 2] = radius;
+        dotCounts[group] += 3;
       }
-      ctx!.fillStyle = veeInk; ctx!.fill(veeDots);
-      ctx!.fillStyle = baseInk; ctx!.fill(frontDots);
-      ctx!.fillStyle = "#6b8876"; ctx!.fill(loaderAccent);
-      if ((moving || !pausedRef.current) && !motion.matches) frame = requestAnimationFrame(draw);
+      fillDots(1, veeInk);
+      fillDots(0, baseInk);
+      fillDots(2, "#6b8876");
+      if (((moving || !pausedRef.current) && !motion.matches) || time < themeRepaintUntil) frame = requestAnimationFrame(draw);
     }
     function wake() { if (!frame && (loaded || intro) && !document.hidden) { last = performance.now(); frame = requestAnimationFrame(draw); } }
     function build() {
@@ -331,14 +346,36 @@ export default function ParticlePortrait() {
         const mound = 7 + 29 * Math.exp(-Math.pow((u - .32) / .13, 2)) + 20 * Math.exp(-Math.pow((u - .67) / .17, 2)) + 6 * Math.sin(u * 25) ** 2;
         const by = basinY - Math.pow(random(), 2.6) * mound - random() * 3;
         const delay = Math.min(.7, Math.max(0, (ty - oy) / rect.height) * .45 + random() * .2);
-        dots.push({ tx, ty, nx, ny, lx, ly, logoTone: lp.tone, logoV: lp.vee, bx, by, delay, bend: (random() - .5) * rect.width * .4, x: motion.matches ? tx : tx + (random() - .5) * width * .85, y: motion.matches ? ty : ty + (random() - .5) * height * .65, vx: 0, vy: 0, r: (.4 + dark * .5 + random() * .1) * scale });
+        dots.push({ tx, ty, nightX: tx, nightY: ty, nightR: 0, nx, ny, lx, ly, logoTone: lp.tone, logoV: lp.vee, bx, by, delay, bend: (random() - .5) * rect.width * .4, x: motion.matches ? tx : tx + (random() - .5) * width * .85, y: motion.matches ? ty : ty + (random() - .5) * height * .65, vx: 0, vy: 0, r: (.4 + dark * .5 + random() * .1) * scale });
       }
+      // Sample the same cutout by luminance for night mode. Reuse the existing
+      // particle count and logo/nav targets so the cycle and its density stay stable.
+      const highlights: { x: number; y: number; tone: number; order: number; rank: number }[] = [];
+      for (let y = 0; y < sample.height; y += 2) for (let x = 0; x < sample.width; x += 2) {
+        const offset = (y * sample.width + x) * 4;
+        const alpha = data[offset + 3] / 255;
+        const luminance = (data[offset] * .2126 + data[offset + 1] * .7152 + data[offset + 2] * .0722) / 255;
+        const tone = Math.pow(luminance, 1.45) * alpha;
+        if (tone < .025) continue;
+        highlights.push({ x, y, tone, order: offset,
+          rank: -Math.log(Math.max(.00001, noise(offset, 19))) / tone });
+      }
+      const nightPoints = highlights.sort((a, b) => a.rank - b.rank).slice(0, dots.length).sort((a, b) => a.order - b.order);
+      dots.forEach((p, index) => {
+        const point = nightPoints[index % nightPoints.length];
+        if (!point) { p.nightR = p.r; return; }
+        p.nightX = ox + (point.x + (noise(index, 20) - .5) * 1.1) * scale;
+        p.nightY = oy + (point.y + (noise(index, 21) - .5) * 1.1) * scale;
+        p.nightR = (.22 + .65 * Math.sqrt(point.tone)) * scale;
+      });
       if (intro) dots.forEach((p, index) => {
         const origin = loaderPoint(index);
         const t = smooth(formation);
-        p.x = origin.x + (p.tx - origin.x) * t;
-        p.y = origin.y + (p.ty - origin.y) * t;
+        const darkPortrait = root.dataset.theme === "dark" && !root.dataset.projectTheme;
+        p.x = origin.x + ((darkPortrait ? p.nightX : p.tx) - origin.x) * t;
+        p.y = origin.y + ((darkPortrait ? p.nightY : p.ty) - origin.y) * t;
       });
+      dotBuffers = [new Float64Array(dots.length * 3), new Float64Array(dots.length * 3), new Float64Array(dots.length * 3)];
       updateScroll();
     }
     function updateScroll() {
@@ -346,12 +383,15 @@ export default function ParticlePortrait() {
       if (raw > .001) { returning = true; finishIntro(); }
       if (raw <= .001 && returning) { cycleTime = 0; returning = false; }
       progress = motion.matches ? (raw >= .5 ? 1 : 0) : raw * raw * (3 - 2 * raw);
+      stage.style.setProperty("--navbar-progress", String(progress));
       wake();
     }
     const move = (e: PointerEvent) => { if (motion.matches) return; pointer.x = e.clientX; pointer.y = e.clientY; wake(); };
     const leave = () => { pointer.x = pointer.y = -1000; wake(); };
     const resume = () => wake();
     const visibility = () => { if (document.hidden) { cancelAnimationFrame(frame); frame = 0; } else wake(); };
+    const themeObserver = new MutationObserver(() => { themeRepaintUntil = performance.now() + 1000; if (!frame) { last = performance.now(); frame = requestAnimationFrame(draw); } });
+    themeObserver.observe(root, {attributes:true, attributeFilter:["data-project-theme", "data-theme"]});
     const resize = new ResizeObserver(build);
     source.onload = () => { loaded = true; build(); };
     source.onerror = () => { if (!disposed) { finishIntro(); ctx.clearRect(0, 0, width, height); setFailed(true); } };
@@ -362,7 +402,7 @@ export default function ParticlePortrait() {
     window.addEventListener("scroll", updateScroll, { passive: true });
     window.addEventListener("pointermove", move); window.addEventListener("pointerleave", leave); window.addEventListener("pointerup", leave);
     motion.addEventListener("change", build); document.addEventListener("visibilitychange", visibility);
-    return () => { disposed = true; clearTimeout(introTimeout); finishIntro(); canvas.removeEventListener("resume-particles", resume); cancelAnimationFrame(frame); resize.disconnect(); window.removeEventListener("scroll", updateScroll); window.removeEventListener("pointermove", move); window.removeEventListener("pointerleave", leave); window.removeEventListener("pointerup", leave); motion.removeEventListener("change", build); document.removeEventListener("visibilitychange", visibility); };
+    return () => { disposed = true; clearTimeout(introTimeout); finishIntro(); canvas.removeEventListener("resume-particles", resume); cancelAnimationFrame(frame); resize.disconnect(); themeObserver.disconnect(); window.removeEventListener("scroll", updateScroll); window.removeEventListener("pointermove", move); window.removeEventListener("pointerleave", leave); window.removeEventListener("pointerup", leave); motion.removeEventListener("change", build); document.removeEventListener("visibilitychange", visibility); };
   }, []);
-  return <div className="portrait-stage"><button type="button" className="particle-toggle" aria-pressed={paused} aria-label={paused ? "Reanudar animación" : "Pausar animación"} onClick={() => { pausedRef.current = !pausedRef.current; setPaused(pausedRef.current); ref.current?.dispatchEvent(new Event("resume-particles")); }}>{paused ? "Reanudar" : "Pausar"}</button><canvas ref={ref} role="img" aria-label="Partículas que alternan entre el retrato de Rafael Vales y su monograma RV" />{failed && <p className="portrait-error">Rafael Vales</p>}</div>;
+  return <div className="portrait-stage"><button type="button" className="particle-toggle" aria-pressed={paused} aria-label={paused ? t("Reanudar animación") : t("Pausar animación")} onClick={() => { pausedRef.current = !pausedRef.current; setPaused(pausedRef.current); ref.current?.dispatchEvent(new Event("resume-particles")); }}>{paused ? t("Reanudar") : t("Pausar")}</button><canvas ref={ref} role="img" aria-label={t("Partículas que alternan entre el retrato de Rafael Vales y su monograma RV")} />{failed && <p className="portrait-error">Rafael Vales</p>}</div>;
 }
