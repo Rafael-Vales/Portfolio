@@ -78,7 +78,7 @@ const slides: Slide[] = [
         {!reduced && <button type="button" className="trip-showcase-pause" onClick={() => setPaused(value => !value)} aria-label={paused ? t("Reanudar presentación") : t("Pausar presentación")}>{paused ? t("Reanudar") : t("Pausar")}</button>}
         <span className="trip-showcase-count">{String(index + 1).padStart(2, "0")} / {String(slides.length).padStart(2, "0")}</span>
       </div>
-      <span className="trip-project-role">{t("Diseñado y desarrollado por mí.")}</span>
+      <span className="trip-project-role">{t("Diseñado y desarrollado por mí.")}<br />{t("Vista de demostración de TripPilot.", "TripPilot demonstration.")}</span>
     </div>
     <div className="trip-showcase-phone">
       {slides.map((item, i) => <div key={item.image} className="trip-showcase-frame" data-current={i === index} aria-hidden={i !== index}>
