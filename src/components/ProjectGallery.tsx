@@ -1,5 +1,6 @@
 "use client";
 
+import ProjectColorPaint, { type PaintOrigin } from "./ProjectColorPaint";
 import AnimalFeedLogo from "./AnimalFeedLogo";
 import AnimalFeedShowcase from "./AnimalFeedShowcase";
 import TripPilotShowcase from "./TripPilotShowcase";
@@ -7,7 +8,7 @@ import { createPortal, flushSync } from "react-dom";
 import ProjectBack from "./ProjectBack";
 import { useLocale } from "./LocaleProvider";
 import TripPilotLogo from "./TripPilotLogo";
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { type CSSProperties, useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 
 
 
@@ -31,6 +32,7 @@ const projects = [
   const [shared, setShared] = useState(false);
   const [shareFailed, setShareFailed] = useState(false);
   const transitioning = useRef(false);
+  const transitionId = useRef(0);
   useEffect(() => {
     const name = selected === null ? (locale === "en" ? "Fullstack developer" : "Desarrollador fullstack") : ["TripPilot", "Animal Feed", locale === "en" ? "Dermatology clinic" : "Consultorio dermatológico"][selected];
     document.title = selected === null ? `Rafael Vales — ${name}` : `${name} — Rafael Vales`;
@@ -72,7 +74,8 @@ const projects = [
 	}, [selected]);
 	const [paint, setPaint] = useState<{
 		color: string;
-		reveal: boolean;
+		stage: "card" | "spread";
+        origin: PaintOrigin;
 	} | null>(null);
 	useLayoutEffect(() => {
 		if (paint) document.documentElement.dataset.projectPainting = "true";
@@ -83,8 +86,16 @@ const projects = [
 	}, [paint]);
 	const [leaving, setLeaving] = useState(false);
 	const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const finishPaint = useCallback(() => {
+    // The SVG has covered the viewport. Switch the palette under that same frame.
+    flushSync(() => setColored(true));
+    timer.current=setTimeout(() => {
+      setPaint(null); timer.current=null; transitioning.current=false;
+    },80);
+  }, []);
   useEffect(() => {
     function restore() {
+      transitionId.current++; transitioning.current=false;
       if(timer.current){clearTimeout(timer.current);timer.current=null;}
       const next=slugs.indexOf(new URL(window.location.href).searchParams.get("project") ?? "");
       setSelected(next<0?null:next);setColored(next>=0);setPaint(null);setLeaving(false);setTryingStore(false);setFlipped(false);
@@ -95,6 +106,7 @@ const projects = [
 	useEffect(
 		() => () => {
 			if (timer.current) clearTimeout(timer.current);
+            transitionId.current++;
 			delete document.documentElement.dataset.projectPainting;
 		},
 		[],
@@ -102,6 +114,7 @@ const projects = [
   function transition(next: number | null) {
     if (timer.current || transitioning.current) return;
     transitioning.current = true;
+    const id = ++transitionId.current;
     const reduced=matchMedia("(prefers-reduced-motion: reduce)").matches;
     const color=next===0?"#2a7d6b":next===1?"#0b1d4d":null;
     const painting=Boolean(color&&!reduced);
@@ -113,15 +126,27 @@ const projects = [
       const url=new URL(window.location.href);
       if(next===null)url.searchParams.delete("project");else url.searchParams.set("project",slugs[next]);
       url.hash="proyectos";window.history.pushState({},"",url);
-      if(painting){timer.current=setTimeout(()=>{
-        setPaint({color:color!,reveal:false});
-        timer.current=setTimeout(()=>{setColored(true);setPaint(null);timer.current=null;},650);
-      },220);}else timer.current=null;
+    };
+    const beginPaint=()=>{
+      if (id !== transitionId.current) return;
+      if(!painting) { transitioning.current=false; return; }
+      const bounds=document.querySelector(".project-expanded-cover")?.getBoundingClientRect();
+      if(!bounds){setColored(true);transitioning.current=false;return;}
+      const origin: PaintOrigin={left:bounds.left,top:bounds.top,width:bounds.width,height:bounds.height};
+      setPaint({color:color!,stage:"card",origin});
+      timer.current=setTimeout(()=>{
+        setPaint({color:color!,stage:"spread",origin});
+        timer.current=null;
+      },440);
     };
     if(!reduced && document.startViewTransition) {
       const view=document.startViewTransition(update);
-      void view.finished.catch(()=>{}).finally(()=>{transitioning.current=false;});
-    } else { update();transitioning.current=false; }
+      void view.finished.catch(()=>{}).finally(beginPaint);
+    } else {
+      update();
+      if(painting) timer.current=setTimeout(()=>{timer.current=null;beginPaint();},450);
+      else transitioning.current=false;
+    }
   }
 
 	function open(index: number) {
@@ -162,16 +187,10 @@ const projects = [
 					step(1);
 				}
 			}}>
-			{paint &&
-				createPortal(
-					<div
-						className="project-color-paint"
-						data-reveal={paint.reveal}
-						style={{ backgroundColor: paint.color }}
-						aria-hidden="true"
-					/>,
-					document.body,
-				)}
+            {paint?.stage === "spread" && createPortal(
+              <ProjectColorPaint color={paint.color} origin={paint.origin} onComplete={finishPaint} />,
+              document.body,
+            )}
 			<div className="project-browser-toolbar">
 				<h2
 					id="proyectos-heading"
@@ -246,7 +265,7 @@ const projects = [
 								key={selected}
 								className={`project-expanded-cover project-expanded-cover--${projects[selected].style}`}
                                 data-flipped={flipped}
-                                style={{viewTransitionName:"project-panel"}}>
+                                style={{viewTransitionName:"project-panel", "--project-panel-color": selected === 0 ? "#236b5c" : "#102659"} as CSSProperties}>
                                 <div className="project-front" inert={flipped} aria-hidden={flipped}>
 								{selected === 0 ? (
 									<>
@@ -285,18 +304,7 @@ const projects = [
                                   <ProjectBack index={selected} />
                                   <button ref={flipReturn} type="button" className="project-flip-trigger" onClick={()=>flip(false)}>{t("Volver al producto","Back to the product")} <span aria-hidden="true">↶</span></button>
                                 </div>
-								{paint && (
-									<span
-										className="project-panel-paint"
-										style={{
-											backgroundColor:
-												selected === 0
-													? "#236b5c"
-													: "#102659",
-										}}
-										aria-hidden="true"
-									/>
-								)}
+
 							</div>
 							<button
 								className="project-arrow"

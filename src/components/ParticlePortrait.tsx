@@ -185,10 +185,10 @@ export default function ParticlePortrait() {
       const portraitTone = root.dataset.theme === "dark" ? 220 : 21;
       const greenInk = [107, 136, 118].map(value => Math.round(portraitTone + (value - portraitTone) * logoColorBlend));
       const veeInk = pageStyle.getPropertyValue("--particle-ink").trim() || `rgb(${greenInk.join(",")})`;
-      // White particles describe reflected light on a dark page, not the photo's shadows.
-      const darkPortrait = root.dataset.theme === "dark" && !root.dataset.projectTheme;
+      // Bright particles on dark backgrounds describe reflected light, not shadows.
+      const highlightPortrait = pageStyle.getPropertyValue("--portrait-highlights").trim() === "1";
       const logoBlend = phase < 8 ? 0 : phase < 10 ? smooth((phase - 8) / 2) : phase < 16 ? 1 : phase < 18 ? 1 - smooth((phase - 16) / 2) : 0;
-      const nightRadiusBlend = darkPortrait ? (1 - logoBlend) * (1 - progress) * (intro ? smooth(formation) : 1) : 0;
+      const highlightRadiusBlend = highlightPortrait ? (1 - logoBlend) * (1 - progress) * (intro ? smooth(formation) : 1) : 0;
       dotCounts.fill(0);
       const settle = Math.max(0, Math.min(1, (progress - .65) / .35));
       const navbarFade = settle * settle * (3 - 2 * settle);
@@ -200,8 +200,8 @@ export default function ParticlePortrait() {
         const flow = motion.matches ? 0 : progress;
         const driftX = Math.sin(flowTime * .38 + p.nx * .004 + p.ny * .035) * 22 * flow;
         const driftY = Math.sin(flowTime * .55 + p.nx * .009) * 4.5 * flow;
-        const portraitX = darkPortrait ? p.nightX : p.tx;
-        const portraitY = darkPortrait ? p.nightY : p.ty;
+        const portraitX = highlightPortrait ? p.nightX : p.tx;
+        const portraitY = highlightPortrait ? p.nightY : p.ty;
         let hx = portraitX, hy = portraitY;
         if (phase >= 6 && phase < 8) {
           const t = Math.max(0, Math.min(1, (phase - 6 - p.delay) / (2 - p.delay)));
@@ -261,7 +261,7 @@ export default function ParticlePortrait() {
         // Keep the travelling cloud substantial, then settle into a darker fine texture.
         const transitionBoost = Math.sin(progress * Math.PI) * .22;
         const tone = 1 + (p.logoTone - 1) * logoBlend * (1 - progress);
-        const portraitRadius = p.r + (p.nightR - p.r) * nightRadiusBlend;
+        const portraitRadius = p.r + (p.nightR - p.r) * highlightRadiusBlend;
         const radius = (intro ? (loaderRadius(index) + (portraitRadius - loaderRadius(index)) * smooth(formation)) : portraitRadius) * tone * (1 - progress * .14 + transitionBoost) * (1 - progress * (1 - clearance));
         if (radius < .025) continue;
         const seed = loaderSeeds[index % loaderCount];
@@ -275,7 +275,7 @@ export default function ParticlePortrait() {
       }
       fillDots(1, veeInk);
       fillDots(0, baseInk);
-      fillDots(2, "#6b8876");
+      fillDots(2, pageStyle.getPropertyValue("--accent").trim() || "#6b8876");
       if (((moving || !pausedRef.current) && !motion.matches) || time < themeRepaintUntil) frame = requestAnimationFrame(draw);
     }
     function wake() { if (!frame && (loaded || intro) && !document.hidden) { last = performance.now(); frame = requestAnimationFrame(draw); } }
@@ -368,12 +368,12 @@ export default function ParticlePortrait() {
         p.nightY = oy + (point.y + (noise(index, 21) - .5) * 1.1) * scale;
         p.nightR = (.22 + .65 * Math.sqrt(point.tone)) * scale;
       });
+      const highlightPortrait = getComputedStyle(document.body).getPropertyValue("--portrait-highlights").trim() === "1";
       if (intro) dots.forEach((p, index) => {
         const origin = loaderPoint(index);
         const t = smooth(formation);
-        const darkPortrait = root.dataset.theme === "dark" && !root.dataset.projectTheme;
-        p.x = origin.x + ((darkPortrait ? p.nightX : p.tx) - origin.x) * t;
-        p.y = origin.y + ((darkPortrait ? p.nightY : p.ty) - origin.y) * t;
+        p.x = origin.x + ((highlightPortrait ? p.nightX : p.tx) - origin.x) * t;
+        p.y = origin.y + ((highlightPortrait ? p.nightY : p.ty) - origin.y) * t;
       });
       dotBuffers = [new Float64Array(dots.length * 3), new Float64Array(dots.length * 3), new Float64Array(dots.length * 3)];
       updateScroll();

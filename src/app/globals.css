@@ -1,10 +1,10 @@
 @import "tailwindcss";
-:root { --background: #fafaf9; --foreground: #212321; --muted: #626560; --line: #e4e5df; --accent: #6b8876; --surface: #ecefeb; --portrait-ink: #151515; color-scheme: light; }
+:root { --background: #fafaf9; --foreground: #212321; --muted: #626560; --line: #e4e5df; --accent: #6b8876; --surface: #ecefeb; --portrait-ink: #151515; --portrait-highlights: 0; --accent-text: var(--accent); --accent-soft: color-mix(in srgb, var(--accent) 8%, transparent); --accent-border: color-mix(in srgb, var(--accent) 50%, transparent); --action-background: var(--foreground); --action-foreground: var(--background); --action-hover: color-mix(in srgb, var(--foreground) 85%, var(--accent)); color-scheme: light; }
 * { box-sizing: border-box; }
 html { scroll-behavior: smooth; scroll-padding-top: 100px; }
 body { margin: 0; background: var(--background); color: var(--foreground); font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif; -webkit-font-smoothing: antialiased; }
 a { color: inherit; text-decoration: none; }
-a:focus-visible { outline: 2px solid #356551; outline-offset: 6px; border-radius: 3px; }
+a:focus-visible { outline: 2px solid var(--accent); outline-offset: 6px; border-radius: 3px; }
 ::selection { background: #dde8dd; }
 .container { width: min(100% - 128px, 1312px); margin-inline: auto; }
 .skip-link { position: fixed; top: 12px; left: 16px; z-index: 100; transform: translateY(-180%); background: white; padding: 12px; }
@@ -108,7 +108,7 @@ nav a:hover { color: #121510; text-decoration: underline; text-underline-offset:
 
 .particle-toggle { position: absolute; bottom: 4px; left: 50%; transform: translateX(-50%); z-index: 23; pointer-events: auto; padding: 10px 14px; font: inherit; font-size: 11px; color: var(--muted); border: 0; background: transparent; cursor: pointer; }
 .particle-toggle:hover { color: var(--foreground); }
-.particle-toggle:focus-visible { outline: 2px solid #356551; outline-offset: 2px; border-radius: 4px; }
+.particle-toggle:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
 @media (prefers-reduced-motion: reduce) { .particle-toggle { display: none; } }
 
 /* Project gallery: name-only covers while we explore the composition. */
@@ -178,33 +178,27 @@ nav a:hover { color: #121510; text-decoration: underline; text-underline-offset:
 
 /* TripPilot brand trial: accent from TripPilot/Shared/Theme/AppTheme.swift. */
 body { transition: background-color 850ms cubic-bezier(.22,1,.36,1), color 700ms ease; }
-:root[data-project-theme="trippilot"] { --background: #2a7d6b; --foreground: #f7f5f0; --muted: #ddf0ea; --line: #ffffff30; --particle-ink: #0f3d2e; }
+:root[data-project-theme="trippilot"] { --background: #2a7d6b; --foreground: #f7f5f0; --muted: #ddf0ea; --accent: #b8f3d8; --accent-text: #d4f8e7; --surface: #236b5c; --line: #b8f3d850; --particle-ink: #0f3d2e; --action-background: #b8f3d8; --action-foreground: #123e30; --action-hover: #d4f8e7; }
 :root[data-project-theme="trippilot"] .header nav a,
 :root[data-project-theme="trippilot"] .header nav a:hover,
 :root[data-project-theme="trippilot"] .scroll-name a:hover,
 :root[data-project-theme="trippilot"] .timeline-list dt,
 :root[data-project-theme="trippilot"] .project-arrow { color: var(--foreground); }
-:root[data-project-theme="trippilot"] .scroll-name span { color: #ddf0ea; }
-:root[data-project-theme="trippilot"] .project-expanded-cover--trip { background: #236b5c; border-color: #ffffff26; box-shadow: 0 28px 60px -34px #0f3d2e80; }
-:root[data-project-theme="trippilot"] .project-arrow:hover { background: #ffffff16; }
-:root[data-project-theme="trippilot"] a:focus-visible,
-:root[data-project-theme="trippilot"] button:focus-visible { outline-color: #f7f5f0; }
+:root[data-project-theme="trippilot"] .scroll-name span { color: var(--accent); }
+:root[data-project-theme="trippilot"] .project-expanded-cover--trip { background: var(--surface); border-color: var(--accent-border); box-shadow: 0 28px 60px -34px #0f3d2e80; }
 :root[data-project-theme="trippilot"] ::selection { color: #0f3d2e; background: #ddf0ea; }
 .project-expanded-cover { transition: background-color 850ms cubic-bezier(.22,1,.36,1), border-color 700ms ease; }
 @media (prefers-reduced-motion: reduce) { body, .project-expanded-cover { transition: none; } }
 
 /* Animal Feed palette from the LosAbuelos storefront header. */
-:root[data-project-theme="animal-feed"] { --background: #0b1d4d; --foreground: #fafaf9; --muted: #cbd4e9; --line: #ffffff26; --particle-ink: #040d26; }
+:root[data-project-theme="animal-feed"] { --background: #0b1d4d; --foreground: #fafaf9; --muted: #cbd4e9; --accent: #f32947; --accent-text: #ff6b81; --surface: #102659; --line: #f3294760; --particle-ink: #f32947; --portrait-highlights: 1; --action-background: #c9203d; --action-foreground: #ffffff; --action-hover: #b51b35; }
 :root[data-project-theme="animal-feed"] .header nav a,
 :root[data-project-theme="animal-feed"] .scroll-name a:hover,
 :root[data-project-theme="animal-feed"] .timeline-list dt,
 :root[data-project-theme="animal-feed"] .project-arrow { color: var(--foreground); }
 :root[data-project-theme="animal-feed"] .scroll-name span,
 :root[data-project-theme="animal-feed"] .header nav a:hover { color: #f32947; }
-:root[data-project-theme="animal-feed"] .project-expanded-cover--shop { background: #102659; border-color: #ffffff20; box-shadow: 0 28px 60px -34px #040d2690; }
-:root[data-project-theme="animal-feed"] .project-arrow:hover { background: #f32947; }
-:root[data-project-theme="animal-feed"] a:focus-visible,
-:root[data-project-theme="animal-feed"] button:focus-visible { outline-color: #fafaf9; }
+:root[data-project-theme="animal-feed"] .project-expanded-cover--shop { background: var(--surface); border-color: var(--accent-border); box-shadow: 0 28px 60px -34px #040d2690; }
 :root[data-project-theme="animal-feed"] ::selection { color: #fff; background: #bd1935; }
 
 /* TripPilot cover exploration with its actual iOS icon. */
@@ -242,20 +236,19 @@ body { transition: background-color 850ms cubic-bezier(.22,1,.36,1), color 700ms
 @media (prefers-reduced-motion: reduce) { .trip-logo-occlusion { animation: none; opacity: 1; } }
 
 
-/* Reveal the project first, then sweep its color across the page. */
+/* Color the card first; its perimeter then spills across the viewport. */
 body { isolation: isolate; }
 main.container, .footer { position: relative; z-index: 1; }
-:root[data-project-painting="true"] body { transition: none; }
-.project-color-paint { position: fixed; inset: 0; z-index: 0; pointer-events: none; animation: project-paint-spread 1100ms cubic-bezier(.3,.05,.2,1) both; }
+:root[data-project-painting="true"] body { transition: color 350ms ease; }
+.project-color-paint, .project-navbar-paint { position: fixed; inset: 0; width: 100%; height: 100dvh; z-index: 0; pointer-events: none; overflow: hidden; }
+.project-navbar-paint { z-index: 20; opacity: var(--navbar-progress, 1); }
+:root[data-project-spread="true"] .portrait-stage::before { visibility: hidden; }
+.project-browser[data-painting="true"] .project-expanded-cover { background: var(--project-panel-color); color: #f7f5f0; border-color: #ffffff30; transition: background-color 400ms ease, color 300ms ease, border-color 400ms ease; }
 .project-expanded-cover { position: relative; overflow: hidden; }
 .project-expanded-cover h3 { position: relative; z-index: 2; transition: opacity 650ms ease, transform 650ms ease, color 650ms ease; }
 .project-browser[data-waiting="true"] .project-expanded-cover h3 { opacity: 0; transform: translateY(10px); }
 .project-browser[data-painting="true"] .project-expanded-cover h3 { color: #f7f5f0; }
-.project-panel-paint { position: absolute; inset: 0; z-index: 1; animation: project-paint-spread 1100ms cubic-bezier(.3,.05,.2,1) both; }
-@keyframes project-paint-spread {
-  from { clip-path: polygon(0 0, 0 0, 0 100%, 0 100%); }
-  to { clip-path: polygon(0 0, 125% 0, 100% 100%, 0 100%); }
-}
+
 
 /* Particle opening: reveal the interface as the cloud becomes the portrait. */
 .header, .hero .scroll-name, .hero-bottom, .particle-toggle { transition: opacity 650ms ease; }
@@ -266,7 +259,6 @@ main.container, .footer { position: relative; z-index: 1; }
 
 /* TripPilot project introduction, with an emblem crossing the lower edge. */
 .project-expanded-cover--trip { overflow: visible; }
-.project-expanded-cover--trip .project-panel-paint { border-radius: inherit; }
 /* TripPilot: product story, two real screens and a floating app emblem. */
 .project-expanded-cover--trip { min-height: 540px; height: min(66svh, 700px); }
 .trip-project-content { position: relative; z-index: 2; width: 100%; height: 100%; display: grid; grid-template-columns: .95fr 1.05fr; align-items: center; gap: clamp(20px, 3vw, 48px); padding: 42px clamp(28px, 4vw, 68px) 68px; text-align: left; overflow: hidden; border-radius: inherit; transition: opacity 700ms ease, transform 850ms cubic-bezier(.16,1,.3,1), color 650ms ease; }
@@ -356,7 +348,7 @@ main.container, .footer { position: relative; z-index: 1; }
 
 /* The hit area belongs to the card, independently of its title placement. */
 .project-card-trigger { position: absolute; inset: 0; z-index: 5; width: 100%; height: 100%; padding: 0; border: 0; border-radius: inherit; background: transparent; cursor: pointer; }
-.project-card-trigger:focus-visible { outline: 2px solid #356551; outline-offset: 5px; }
+.project-card-trigger:focus-visible { outline: 2px solid var(--accent); outline-offset: 5px; }
 .project-name-card--shop .project-card-trigger:focus-visible { outline-color: #f32947; }
 
 /* Animal Feed introduction and in-place storefront. */
@@ -552,9 +544,9 @@ main.container, .footer { position: relative; z-index: 1; }
 .journey-nav-arrow { opacity: 0; transform: translateX(-3px); transition: opacity 250ms ease, transform 250ms ease; }
 .journey-navigation a[aria-current="step"], .journey-navigation a:hover { color: var(--foreground); }
 .journey-navigation a[aria-current="step"] .journey-nav-arrow { opacity: 1; transform: none; }
-.journey-cv-link { display: inline-flex; align-items: center; gap: 10px; min-height: 44px; margin-top: 20px; padding: 10px 17px; border: 1px solid var(--line); border-radius: 999px; background: var(--foreground); color: var(--background); font-family: inherit; font-size: 12px; line-height: 1.4; cursor: pointer; transition: background 200ms ease; }
+.journey-cv-link { display: inline-flex; align-items: center; gap: 10px; min-height: 44px; margin-top: 20px; padding: 10px 17px; border: 1px solid var(--line); border-radius: 999px; background: var(--action-background); color: var(--action-foreground); font-family: inherit; font-size: 12px; line-height: 1.4; cursor: pointer; transition: background 200ms ease; }
 .journey-cv-arrow { margin-left: 12px; transition: transform 200ms ease; }
-.journey-cv-link:hover { background: color-mix(in srgb, var(--foreground) 85%, var(--accent)); }
+.journey-cv-link:hover { background: var(--action-hover); }
 .journey-cv-link:hover .journey-cv-arrow { transform: translate(2px, -2px); }
 .journey-cv-link:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; }
 @media (prefers-reduced-motion: reduce) { .journey-cv-link, .journey-cv-arrow { transition: none; } .journey-cv-link:hover .journey-cv-arrow { transform: none; } }
@@ -626,7 +618,7 @@ main.container, .footer { position: relative; z-index: 1; }
 .contact-address > a { width: fit-content; font-size: clamp(20px, 2.4vw, 34px); line-height: 1.3; letter-spacing: -.035em; transition: color 200ms ease; }
 .contact-address > a:hover { color: var(--accent); }
 .contact-actions { position: relative; display: flex; align-items: center; gap: 24px; padding-bottom: 4px; }
-.contact-write { display: inline-flex; align-items: center; justify-content: space-between; gap: 44px; min-height: 54px; border-radius: 999px; padding: 14px 23px; background: var(--foreground); color: var(--background); font-size: 15px; transition: background 220ms ease; }
+.contact-write { display: inline-flex; align-items: center; justify-content: space-between; gap: 44px; min-height: 54px; border-radius: 999px; padding: 14px 23px; background: var(--action-background); color: var(--action-foreground); font-size: 15px; transition: background 220ms ease; }
 .contact-write > span { font-size: 22px; line-height: 1; transition: transform 250ms ease; }
 .contact-write:hover { background: #526b5c; }
 .contact-write:hover > span { transform: translate(3px, -3px); }
@@ -664,7 +656,7 @@ main.container, .footer { position: relative; z-index: 1; }
 .header-inner nav { margin-left: auto; }
 .language-switch { display: flex; gap: 2px; margin-left: 24px; padding: 3px; border: 1px solid var(--line); border-radius: 999px; }
 .language-switch a { display: grid; place-items: center; min-width: 36px; min-height: 36px; font-size: 11px; color: var(--muted); border-radius: inherit; }
-.language-switch a[aria-current="page"] { background: var(--foreground); color: var(--background); }
+.language-switch a[aria-current="page"] { background: var(--action-background); color: var(--action-foreground); }
 .hero .hero-positioning { position: absolute; top: 32px; left: 0; max-width: 340px; margin: 0; font-size: 15px; line-height: 1.6; z-index: 3; transition: opacity 800ms ease, transform 800ms ease; }
 :root[data-particle-intro="loading"] .hero-positioning { opacity: 0; transform: translateY(8px); }
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
@@ -689,8 +681,6 @@ main.container, .footer { position: relative; z-index: 1; }
 .project-back-content > small { font-size: 11px; opacity: .7; }
 .project-flip-trigger { position: absolute; right: 24px; bottom: 16px; min-height: 44px; display: inline-flex; align-items: center; gap: 18px; padding: 8px 15px; border: 1px solid currentColor; border-radius: 999px; color: inherit; background: transparent; font: inherit; font-size: 11px; cursor: pointer; z-index: 5; transition: background 200ms; }
 .project-flip-trigger:hover { background: color-mix(in srgb,currentColor 10%,transparent); }
-.project-panel-paint { pointer-events: none; }
-.project-color-paint, .project-panel-paint { animation-duration: 650ms; }
 .project-view { animation-duration: 450ms; animation-delay: 0ms; }
 ::view-transition-group(project-panel), ::view-transition-group(project-mark) { animation-duration: 700ms; animation-timing-function: cubic-bezier(.22,1,.36,1); }
 ::view-transition-old(root), ::view-transition-new(root) { animation: none; mix-blend-mode: normal; }
@@ -710,10 +700,10 @@ main.container, .footer { position: relative; z-index: 1; }
 .decision-flow { list-style: none; padding: 0; margin: 24px 0; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .decision-flow li { display: flex; align-items: center; gap: 12px; padding: 18px 14px; border: 1px solid var(--line); border-radius: 12px; font-size: 12px; transition: background 400ms,border-color 400ms,transform 400ms; }
 .decision-flow li > span { color: var(--muted); font-size: 11px; width: 18px; }
-.decision-flow li[data-reached="true"] { background: #6b887612; border-color: var(--accent); transform: translateY(-2px); }
+.decision-flow li[data-reached="true"] { background: var(--accent-soft); border-color: var(--accent); transform: translateY(-2px); }
 .decision-flow li[data-reached="true"] > span { color: var(--accent); }
 .decision-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 15px; }
-.decision-actions button { border: 0; border-radius: 999px; padding: 12px 18px; min-height: 44px; background: var(--foreground); color: var(--background); font: inherit; font-size: 12px; cursor: pointer; }
+.decision-actions button { border: 0; border-radius: 999px; padding: 12px 18px; min-height: 44px; background: var(--action-background); color: var(--action-foreground); font: inherit; font-size: 12px; cursor: pointer; }
 .decision-actions button:disabled { opacity: .65; cursor: default; }
 .decision-actions small { color: var(--muted); font-size: 10px; }
 .additional-work { grid-column: 1/-1; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 40px; padding-top: 30px; border-top: 1px solid var(--line); }
@@ -722,7 +712,7 @@ main.container, .footer { position: relative; z-index: 1; }
 .additional-work p { color: var(--muted); font-size: 13px; line-height: 1.7; }
 .additional-work a:hover strong { color: var(--accent); }
 .stack-technologies li > button { display: flex; align-items: center; gap: 14px; padding: 6px; margin: -6px; color: inherit; background: none; border: 1px solid transparent; border-radius: 12px; text-align: left; font: inherit; cursor: pointer; width: calc(100% + 12px); }
-.stack-technologies li > button[aria-pressed="true"] { border-color: #6b887680; background: #6b88760a; }
+.stack-technologies li > button[aria-pressed="true"] { border-color: var(--accent-border); background: var(--accent-soft); }
 .stack-used-in { padding-top: 20px; margin-top: 20px; border-top: 1px solid var(--line); animation: decision-reveal 250ms ease; }
 .stack-used-in > span { display: block; margin-bottom: 12px; font-size: 11px; color: var(--muted); }
 .stack-project-links { display: flex; flex-wrap: wrap; gap: 10px; }
@@ -743,8 +733,8 @@ main.container, .footer { position: relative; z-index: 1; }
 .portrait-stage::before { content: ""; position: fixed; inset: 0 0 auto; z-index: 20; height: 160px; pointer-events: none; opacity: var(--navbar-progress, 0); background: linear-gradient(to bottom, var(--background) 0px, var(--background) 72px, color-mix(in srgb, var(--background) 68%, transparent) 100px, color-mix(in srgb, var(--background) 18%, transparent) 135px, transparent 160px); }
 
 /* Night mode is a page preference; project brand palettes retain priority. */
-:root[data-theme="dark"] { color-scheme: dark; --surface: #202522; --accent: #9bbba7; --portrait-ink: #dcdcdc; }
-:root[data-theme="dark"]:not([data-project-theme]) { --background: #141715; --foreground: #eef0eb; --muted: #adb5ad; --line: #343b35; }
+:root[data-theme="dark"] { color-scheme: dark; --portrait-ink: #dcdcdc; }
+:root[data-theme="dark"]:not([data-project-theme]) { --background: #141715; --foreground: #eef0eb; --muted: #adb5ad; --line: #343b35; --surface: #202522; --accent: #9bbba7; --portrait-highlights: 1; }
 .theme-toggle { display: grid; place-items: center; flex-shrink: 0; width: 44px; height: 44px; margin-left: 12px; padding: 0; border: 1px solid var(--line); border-radius: 50%; background: transparent; color: var(--foreground); cursor: pointer; transition: background 180ms ease, transform 180ms ease; }
 .theme-toggle:hover { background: color-mix(in srgb, var(--foreground) 8%, transparent); transform: rotate(-8deg); }
 .theme-toggle:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; }
@@ -772,5 +762,41 @@ main.container, .footer { position: relative; z-index: 1; }
 :root[data-theme="dark"]:not([data-project-theme]) .project-expanded-cover--shop { background: var(--surface); border-color: var(--line); }
 :root[data-theme="dark"] .project-name-card, :root[data-theme="dark"] .project-expanded-cover { box-shadow: 0 24px 48px -30px #0008; }
 :root[data-theme="dark"]:not([data-project-theme]) .project-arrow:hover { background: #ffffff0c; }
-:root[data-theme="dark"] .contact-write:hover { background: #b9cfbf; }
+:root[data-theme="dark"]:not([data-project-theme]) .contact-write:hover { background: #b9cfbf; }
 :root[data-theme="dark"] a:focus-visible, :root[data-theme="dark"] button:focus-visible { outline-color: var(--accent); }
+
+
+/* An open project supplies the accents throughout the page, in either day/night mode. */
+:root[data-project-theme] .header nav a:hover,
+:root[data-project-theme] .scroll-name a:hover,
+:root[data-project-theme] .project-arrow,
+:root[data-project-theme] .project-flip-trigger,
+:root[data-project-theme] .theme-toggle,
+:root[data-project-theme] .trip-release-status,
+:root[data-project-theme] .animal-project-features,
+:root[data-project-theme] .case-stack,
+:root[data-project-theme] .stack-tabs button[aria-selected="true"],
+:root[data-project-theme] .decision-tabs button[aria-pressed="true"],
+:root[data-project-theme] .journey-navigation a[aria-current="step"],
+:root[data-project-theme] .journey-navigation a:hover,
+:root[data-project-theme] .project-toolbar-actions button:hover,
+:root[data-project-theme] .project-browser-toolbar > button:hover,
+:root[data-project-theme] .trip-showcase-dots button[aria-current="true"],
+:root[data-project-theme] .contact-socials a:hover,
+:root[data-project-theme] .contact-address > a:hover,
+:root[data-project-theme] .journey-takeaway > span,
+:root[data-project-theme] .decision-flow li[data-reached="true"] > span { color: var(--accent-text); }
+:root[data-project-theme] .project-flip-trigger,
+:root[data-project-theme] .theme-toggle { border-color: var(--accent-border); }
+:root[data-project-theme] .project-arrow:hover,
+:root[data-project-theme] .project-flip-trigger:hover,
+:root[data-project-theme] .theme-toggle:hover { background: var(--accent-soft); }
+:root[data-project-theme] .stack-mark { color: var(--accent-text); background: var(--accent-soft); }
+:root[data-project-theme] .journey-cv-link,
+:root[data-project-theme] .language-switch { border-color: var(--accent-border); }
+:root[data-project-theme] .contact-write:hover,
+:root[data-project-theme] .animal-project-cta:hover { background: var(--action-hover); }
+:root[data-project-theme] .animal-project-cta { background: var(--action-background); color: var(--action-foreground); }
+:root[data-project-theme] a:focus-visible,
+:root[data-project-theme] button:focus-visible { outline-color: var(--accent); }
+:root[data-project-theme] .animal-project-features li, :root[data-project-theme] .case-stack li { opacity: 1; border-color: var(--accent-border); }
