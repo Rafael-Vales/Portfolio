@@ -35,7 +35,10 @@ export default function ParticlePortrait() {
       ctx!.fillStyle = color;
       ctx!.fill();
     }
-    let flowTime = 0, cycleTime = 0, holdTimer = 0, themeTimer = 0, resizeTimer = 0;
+    let flowTime = 0, cycleTime = 0, holdTimer = 0, themeTimer = 0, resizeTimer = 0, basinTimer = 0;
+    let basinY = 0;
+    const visualViewport = window.visualViewport;
+    const floorControls = [stage.querySelector<HTMLElement>(".particle-toggle"), hero.querySelector<HTMLElement>(".hero-bottom")];
     let builtWidth = 0, builtHeight = 0, lastPaint = 0;
     const compact = window.matchMedia("(max-width: 700px), (pointer: coarse)").matches;
     const frameInterval = 1000 / (compact ? 30 : 60);
@@ -156,6 +159,37 @@ export default function ParticlePortrait() {
       ctx!.setTransform(dpr, 0, 0, dpr, 0, 0);
       canvas!.style.height = `${height}px`;
     }
+    function measureBasin() {
+      const visibleBottom = (visualViewport?.height ?? window.innerHeight) + (visualViewport?.offsetTop ?? 0);
+      const safeBottom = parseFloat(getComputedStyle(stage).getPropertyValue("--particle-safe-bottom")) || 0;
+      let bottom = Math.min(height, visibleBottom) - Math.max(16, safeBottom + 12);
+      for (const control of floorControls) {
+        const top = control?.getBoundingClientRect().top;
+        if (top !== undefined && top > 72 && top < bottom) bottom = top - 16;
+      }
+      return Math.max(88, bottom);
+    }
+    function refreshBasin() {
+      if (!loaded || disposed || document.hidden || progress !== 0) return;
+      const nextHeight = compact ? hero.offsetHeight + 72 : window.innerHeight;
+      let surfaceChanged = false;
+      if (nextHeight !== height) {
+        surfaceChanged = true;
+        height = nextHeight;
+        canvas!.height = Math.round(height * canvasDpr);
+        ctx!.setTransform(canvasDpr, 0, 0, canvasDpr, 0, 0);
+        canvas!.style.height = `${height}px`;
+      }
+      const next = measureBasin(), delta = next - basinY;
+      if (Math.abs(delta) < .5) { if (surfaceChanged) wake(); return; }
+      basinY = next;
+      // Browser toolbar movements only relocate the floor, never re-sample dots.
+      for (const dot of dots) dot.by += delta;
+      wake();
+    }
+    const viewportResize = () => {
+      clearTimeout(basinTimer); basinTimer = window.setTimeout(refreshBasin, 100);
+    };
     const introTimeout = window.setTimeout(() => { finishIntro(); wake(); }, 6500);
     sizeCanvas();
     readPalette();
@@ -214,6 +248,7 @@ export default function ParticlePortrait() {
       ctx!.globalAlpha = (1 - progress * .18) * (1 - navbarFade * .58);
       ctx!.beginPath();
       let moving = false;
+      const landing = !intro && progress < .001 && (onFloor || (phase >= 6 && phase < 8) || (phase >= 16 && phase < 18));
       const friction = Math.pow(.8, dt);
       for (let index = 0; index < dots.length; index++) {
         const p = dots[index];
@@ -272,6 +307,12 @@ export default function ParticlePortrait() {
           p.x += p.vx * dt; p.y += p.vy * dt;
           if (Math.abs(p.x - tx) + Math.abs(p.y - ty) + Math.abs(p.vx) + Math.abs(p.vy) > .08) moving = true;
         } else { p.x = tx; p.y = ty; }
+        if (landing) {
+          // A physical floor also stops spring overshoot below the visible area.
+          const floor = basinY - Math.max(p.r, p.nightR) * 1.1;
+          if (p.y > floor) { p.y = floor; p.vy = Math.min(0, p.vy); }
+          p.x = Math.max(8, Math.min(width - 8, p.x));
+        }
         let clearance = 1;
         if (progress > 0) {
           // The texture reaches beyond the viewport sides and dissolves over a
@@ -369,7 +410,7 @@ export default function ParticlePortrait() {
       const logoSize = Math.min(width * .9, heroRect.height * .98, 820);
       const logoLeft = width / 2 - logoSize / 2;
       const logoTop = heroTop + heroRect.height * .52 - logoSize * (320 / 360) / 2;
-      const basinY = height - 8;
+      basinY = measureBasin();
       dots = [];
       for (let y = 0; y < sample.height; y += 2) for (let x = 0; x < sample.width; x += 2) {
         const i = (y * sample.width + x) * 4;
@@ -386,7 +427,7 @@ export default function ParticlePortrait() {
         const bx = width / 2 + Math.tanh(normal * .58) * (width / 2 - 10);
         const u = bx / width;
         const mound = 7 + 29 * Math.exp(-Math.pow((u - .32) / .13, 2)) + 20 * Math.exp(-Math.pow((u - .67) / .17, 2)) + 6 * Math.sin(u * 25) ** 2;
-        const by = basinY - Math.pow(random(), 2.6) * mound - random() * 3;
+        const by = basinY - 2 - Math.pow(random(), 2.6) * mound - random() * 3;
         const delay = Math.min(.7, Math.max(0, (ty - oy) / rect.height) * .45 + random() * .2);
         dots.push({ tx, ty, nightX: tx, nightY: ty, nightR: 0, nx, ny, lx, ly, logoTone: lp.tone, logoV: lp.vee, bx, by, delay, bend: (random() - .5) * rect.width * .4, x: motion.matches ? tx : tx + (random() - .5) * width * .85, y: motion.matches ? ty : ty + (random() - .5) * height * .65, vx: 0, vy: 0, r: (.4 + dark * .5 + random() * .1) * scale });
       }
@@ -427,6 +468,7 @@ export default function ParticlePortrait() {
       const next = motion.matches ? (raw >= .5 ? 1 : 0) : raw * raw * (3 - 2 * raw);
       if (next === progress) return;
       progress = next;
+      if (progress === 0) refreshBasin();
       stage.style.setProperty("--navbar-progress", String(progress));
       canvas!.dataset.docked = String(progress === 1);
       if (compact && progress === 1) {
@@ -437,7 +479,7 @@ export default function ParticlePortrait() {
     const move = (e: PointerEvent) => { if (motion.matches || progress === 1) return; pointer.x = e.clientX; pointer.y = e.clientY; wake(); };
     const leave = () => { pointer.x = pointer.y = -1000; wake(); };
     const resume = () => wake();
-    const visibility = () => { if (document.hidden) { cancelAnimationFrame(frame); frame = 0; clearTimeout(holdTimer); } else wake(); };
+    const visibility = () => { if (document.hidden) { cancelAnimationFrame(frame); frame = 0; clearTimeout(holdTimer); } else { refreshBasin(); wake(); } };
     const themeObserver = new MutationObserver(() => {
       readPalette(); wake();
       clearTimeout(themeTimer);
@@ -455,9 +497,12 @@ export default function ParticlePortrait() {
     resize.observe(stage);
     canvas.addEventListener("resume-particles", resume);
     window.addEventListener("scroll", updateScroll, { passive: true });
+    window.addEventListener("resize", viewportResize, { passive: true });
+    visualViewport?.addEventListener("resize", viewportResize, { passive: true });
+    visualViewport?.addEventListener("scroll", viewportResize, { passive: true });
     if (!compact) { window.addEventListener("pointermove", move, {passive: true}); window.addEventListener("pointerleave", leave); window.addEventListener("pointerup", leave); }
     motion.addEventListener("change", rebuild); document.addEventListener("visibilitychange", visibility);
-    return () => { disposed = true; clearTimeout(introTimeout); clearTimeout(holdTimer); clearTimeout(themeTimer); clearTimeout(resizeTimer); finishIntro(); canvas.removeEventListener("resume-particles", resume); cancelAnimationFrame(frame); resize.disconnect(); themeObserver.disconnect(); window.removeEventListener("scroll", updateScroll); window.removeEventListener("pointermove", move); window.removeEventListener("pointerleave", leave); window.removeEventListener("pointerup", leave); motion.removeEventListener("change", rebuild); document.removeEventListener("visibilitychange", visibility); };
+    return () => { disposed = true; clearTimeout(introTimeout); clearTimeout(holdTimer); clearTimeout(themeTimer); clearTimeout(resizeTimer); clearTimeout(basinTimer); window.removeEventListener("resize", viewportResize); visualViewport?.removeEventListener("resize", viewportResize); visualViewport?.removeEventListener("scroll", viewportResize); finishIntro(); canvas.removeEventListener("resume-particles", resume); cancelAnimationFrame(frame); resize.disconnect(); themeObserver.disconnect(); window.removeEventListener("scroll", updateScroll); window.removeEventListener("pointermove", move); window.removeEventListener("pointerleave", leave); window.removeEventListener("pointerup", leave); motion.removeEventListener("change", rebuild); document.removeEventListener("visibilitychange", visibility); };
   }, []);
   return <div className="portrait-stage"><button type="button" className="particle-toggle" aria-pressed={paused} aria-label={paused ? t("Reanudar animación") : t("Pausar animación")} onClick={() => { pausedRef.current = !pausedRef.current; setPaused(pausedRef.current); ref.current?.dispatchEvent(new Event("resume-particles")); }}>{paused ? t("Reanudar") : t("Pausar")}</button><canvas ref={ref} role="img" aria-label={t("Partículas que alternan entre el retrato de Rafael Vales y su monograma RV")} />{failed && <p className="portrait-error">Rafael Vales</p>}</div>;
 }

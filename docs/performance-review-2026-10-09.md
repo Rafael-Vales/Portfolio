@@ -49,3 +49,7 @@ La primera reducción a 240 px de muestreo en celular y 360 px en escritorio hac
 ### Segundo ajuste de definición
 
 Se recupera el muestreo de 480 px también en celular, con puntos más pequeños. En el monograma se distribuyen los destinos de forma uniforme antes de repetirlos y se reduce la dispersión de cada punto: mejora la continuidad de los bordes y evita huecos o acumulaciones aleatorias. Se conservan DPR máximo 2, 30 redibujados por segundo en celular y las pausas dentro y fuera de la portada. El consumo durante las transformaciones debe compararse nuevamente en el iPhone; recuperar densidad aumenta el trabajo de esos cuadros respecto de la primera optimización.
+
+## Piso de partículas adaptable
+
+La pila se posiciona dentro del viewport visual y por encima de Pausar y los enlaces inferiores, respetando el área segura. Se limita el rebote de los resortes para que no atraviese el piso. Los cambios de altura de las barras de Safari desplazan únicamente los destinos de caída, con un ajuste agrupado; no reconstruyen ni vuelven a muestrear el retrato. Los cambios de ancho continúan reconstruyendo la composición.

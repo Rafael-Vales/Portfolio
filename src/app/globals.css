@@ -990,3 +990,6 @@ main.container, .footer { position: relative; z-index: 1; }
 @media (max-width: 700px) {
   .portrait-stage canvas[data-docked="true"] { visibility: hidden; }
 }
+
+/* Keep the particle floor above display cutouts and the home indicator. */
+.portrait-stage { --particle-safe-bottom: env(safe-area-inset-bottom, 0px); }
