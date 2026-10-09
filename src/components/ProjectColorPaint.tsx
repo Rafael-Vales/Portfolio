@@ -29,10 +29,10 @@ function liquidPath(origin: PaintOrigin, width: number, height: number, progress
       : { x: left - wave, y: bottom - (bottom - top) * u });
   }
   // Catmull-Rom to cubic Bezier keeps the moving boundary soft and continuous.
-  let path = `M ${points[0].x} ${points[0].y}`;
+  let path = `M ${points[0].x.toFixed(2)} ${points[0].y.toFixed(2)}`;
   for (let i = 0; i < points.length; i++) {
     const a = points[(i + 31) % 32], b = points[i], c = points[(i + 1) % 32], d = points[(i + 2) % 32];
-    path += ` C ${b.x + (c.x - a.x) / 6} ${b.y + (c.y - a.y) / 6}, ${c.x - (d.x - b.x) / 6} ${c.y - (d.y - b.y) / 6}, ${c.x} ${c.y}`;
+    path += ` C ${(b.x + (c.x - a.x) / 6).toFixed(2)} ${(b.y + (c.y - a.y) / 6).toFixed(2)}, ${(c.x - (d.x - b.x) / 6).toFixed(2)} ${(c.y - (d.y - b.y) / 6).toFixed(2)}, ${c.x.toFixed(2)} ${c.y.toFixed(2)}`;
   }
   const coversViewport = points.every((point, i) => {
     const side = Math.floor(i / 8);
@@ -47,29 +47,30 @@ export default function ProjectColorPaint({ color, origin, onComplete }: { color
   const path = useRef<SVGPathElement>(null);
   const navbarSvg = useRef<SVGSVGElement>(null);
   const navbarPath = useRef<SVGPathElement>(null);
-  const oldVeilCutout = useRef<SVGPathElement>(null);
   const oldVeil = useRef<SVGRectElement>(null);
   const id = useId();
-  const navbarStage = document.querySelector(".portrait-stage");
+  const mobile = matchMedia("(max-width: 700px), (max-width: 1000px) and (max-height: 600px) and (pointer: coarse)").matches;
+  const navbarStage = document.querySelector(mobile ? ".header" : ".portrait-stage");
   useLayoutEffect(() => {
     let frame = 0, completed = false;
     const start = performance.now();
     const width = document.documentElement.clientWidth, height = window.innerHeight;
+    const duration = matchMedia("(pointer: coarse)").matches ? 1000 : PAINT_SPREAD_MS;
     svg.current?.setAttribute("viewBox", `0 0 ${width} ${height}`);
     navbarSvg.current?.setAttribute("viewBox", `0 0 ${width} ${height}`);
     const root = document.documentElement;
     oldVeil.current?.setAttribute("fill", getComputedStyle(document.body).backgroundColor);
     root.dataset.projectSpread = "true";
     function draw(now: number) {
-      const progress = Math.min(1, (now - start) / PAINT_SPREAD_MS);
+      const progress = Math.min(1, (now - start) / duration);
       const shape = liquidPath(origin, width, height, progress);
       path.current?.setAttribute("d", shape.path);
       navbarPath.current?.setAttribute("d", shape.path);
-      oldVeilCutout.current?.setAttribute("d", shape.path);
-      if (progress < 1) frame = requestAnimationFrame(draw);
+
       // Change text/controls as soon as all edges have actually left the viewport.
       // No waiting at a fully painted screen, and no timer forcing unpainted gaps shut.
-      if (!completed && shape.coversViewport) { completed = true; onComplete(); }
+      if (!completed && shape.coversViewport) { completed = true; onComplete(); return; }
+      if (progress < 1) frame = requestAnimationFrame(draw);
     }
     draw(start);
     return () => { cancelAnimationFrame(frame); delete root.dataset.projectSpread; };
@@ -79,6 +80,7 @@ export default function ProjectColorPaint({ color, origin, onComplete }: { color
     {navbarStage && createPortal(
       <svg ref={navbarSvg} className="project-navbar-paint" aria-hidden="true" preserveAspectRatio="none">
         <defs>
+          <path ref={navbarPath} id={`${id}-pool`} />
           <linearGradient id={`${id}-fade`} x1="0" y1="0" x2="0" y2="160" gradientUnits="userSpaceOnUse">
             <stop offset="0" stopColor="white" /><stop offset=".45" stopColor="white" />
             <stop offset=".625" stopColor="white" stopOpacity=".68" />
@@ -89,12 +91,12 @@ export default function ProjectColorPaint({ color, origin, onComplete }: { color
           </mask>
           <mask id={`${id}-unpainted`} maskUnits="userSpaceOnUse" x="0" y="0" width="100%" height="160">
             <rect width="100%" height="160" fill="white" />
-            <path ref={oldVeilCutout} fill="black" />
+            <use href={`#${id}-pool`} fill="black" />
           </mask>
         </defs>
         <g mask={`url(#${id}-veil)`}>
           <rect ref={oldVeil} width="100%" height="160" mask={`url(#${id}-unpainted)`} />
-          <path ref={navbarPath} fill={color} />
+          <use href={`#${id}-pool`} fill={color} />
         </g>
       </svg>, navbarStage,
     )}

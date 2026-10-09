@@ -189,10 +189,11 @@ const projects = [
     transitioning.current = true;
     const id = ++transitionId.current;
     const reduced=matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const mobile=matchMedia(mobileProjectQuery).matches;
     const color=next===0?"#2a7d6b":next===1?"#0b1d4d":null;
     const painting=Boolean(color&&!reduced);
     const card = selected===null && next!==null ? triggers.current[next]?.closest<HTMLElement>("article") : null;
-    if(card){card.style.viewTransitionName="project-panel";const mark=card.querySelector<HTMLElement>(".trip-card-logo, .animal-logo");if(mark)mark.style.viewTransitionName="project-mark";}
+    if(card && !mobile){card.style.viewTransitionName="project-panel";const mark=card.querySelector<HTMLElement>(".trip-card-logo, .animal-logo");if(mark)mark.style.viewTransitionName="project-mark";}
     const update=()=>{
       restoreFocus.current=true;
       flushSync(()=>{setSelected(next);setColored(!painting);setFlipped(false);setTryingStore(false);setLeaving(false);setShared(false);});
@@ -210,14 +211,16 @@ const projects = [
       timer.current=setTimeout(()=>{
         setPaint({color:color!,stage:"spread",origin});
         timer.current=null;
-      },440);
+      },mobile ? 160 : 360);
     };
-    if(!reduced && document.startViewTransition) {
+    // Mobile uses one live scene: avoid a full-screen snapshot followed by a second reveal.
+    if(!mobile && !reduced && document.startViewTransition) {
       const view=document.startViewTransition(update);
       void view.finished.catch(()=>{}).finally(beginPaint);
     } else {
       update();
-      if(painting) timer.current=setTimeout(()=>{timer.current=null;beginPaint();},450);
+      if(painting && mobile) beginPaint();
+      else if(painting) timer.current=setTimeout(()=>{timer.current=null;beginPaint();},450);
       else transitioning.current=false;
     }
   }
