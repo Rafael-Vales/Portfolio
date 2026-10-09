@@ -99,3 +99,47 @@ La altura mínima del hero móvil ahora respeta el espacio disponible. Se verifi
 | 1440 × 900 | 824 | 845.70 | 890.93 | Dentro del viewport, debajo de los textos |
 
 Medición en píxeles CSS con Chromium local. No sustituye la revisión de las barras dinámicas y temperatura en Safari del iPhone. Compilación y lint volvieron a pasar después del ajuste de altura.
+
+
+## Corrección de fluidez tras revisar la grabación de las 13:28
+
+### Causas reproducidas
+
+La optimización anterior alternaba 6777 puntos durante el movimiento con 27107 al detenerse en Chromium móvil. El salto de densidad aparecía cuatro veces durante retrato → pila → monograma. El límite de 24 cuadros/s producía intervalos de unos 42 ms en la pantalla local de 60 Hz. Al terminar la transición se reemplazaba el estado del resorte por el destino exacto, introduciendo otro salto. Además, un temporizador de apertura despertaba el retrato a los 6,5 s incluso cuando no había apertura y reiniciaba su pausa.
+
+### Implementación vigente
+
+- En dispositivos táctiles, los destinos de retrato, retrato nocturno, pila, monograma y apertura se cargan una vez en un buffer estático. Un vertex shader interpola el conjunto completo en cada cuadro, con una sola llamada de dibujo y sin actualizaciones de posiciones desde JavaScript en cada cuadro.
+- Caída y formación usan curvas continuas dependientes del tiempo; las formaciones llegan con velocidad y aceleración suaves a la figura final. Se elimina el cambio de densidad entre movimiento y reposo.
+- Se admite una cadencia máxima de 60 cuadros/s. En las pausas, con movimiento reducido, pestaña oculta y al scrollear fuera del hero se conserva la detención real del bucle. El canvas sigue limitado a DPR 2.
+- Los cambios de altura actualizan el piso con un desplazamiento uniforme; no vuelven a subir todos los destinos. Se conserva el renderer de escritorio con interacción de puntero y el retrato estático ante falta/pérdida de WebGL.
+- El temporizador de apertura solo termina una apertura que sigue activa. No interrumpe las pausas del ciclo normal.
+
+### Resultados actuales
+
+Producción local en Mac, viewport 393 × 852, DPR del dispositivo 3 y del canvas 2. Instrumentación de requestAnimationFrame, clear, drawArrays y bufferSubData. Cadencia medida entre callbacks que dibujan durante caída/formación; se excluyen los intervalos de reposo. Las lecturas de píxeles y getError se usaron únicamente en los tests, no en la aplicación.
+
+| Medición | Chromium anterior | Chromium actual | WebKit actual |
+| --- | ---: | ---: | ---: |
+| Puntos durante el movimiento | 6777 | 27107 | 26773 |
+| Saltos de densidad detectados | 4 | 0 | 0 |
+| Intervalo mediano de cuadros en movimiento | 41,7 ms | 16,7 ms | 17 ms |
+| Intervalo percentil 95 | 42,6 ms | 17,6 ms | 18 ms |
+| Tiempo JS medio del callback de dibujo, apertura incluida | No medido en esta prueba | 0,115 ms | 0,162 ms |
+| Tiempo JS percentil 95 del callback | No medido en esta prueba | 0,3 ms | 1 ms |
+| Nuevos dibujos durante pausa / fuera del hero | — | 0 / 0 | 0 / 0 |
+
+El conteo difiere ligeramente entre motores por el muestreo del monograma. En cada motor es constante entre todas las fases. Los tiempos JS no incluyen todo el trabajo de GPU ni todo el trabajo de la página, y no equivalen a energía consumida.
+
+Se verificaron apertura, retrato, caída, pausa/reanudación, monograma, modo nocturno y salida del hero sin excepciones de página ni errores de WebGL. La pila en 393 × 852 ocupa aproximadamente y=797–842,5, debajo de los textos que terminan en y=777. También se comprobaron 320 × 568, 430 × 932 y 768 × 1024: pila dentro del viewport y debajo de los controles. Sin WebGL, con pérdida de contexto y con movimiento reducido: retrato disponible, sin nuevos dibujos durante el reposo y sin excepciones.
+
+### Investigación aplicada
+
+- [MDN: WebGL best practices](https://developer.mozilla.org/en-US/docs/Web/API/WebGL_API/WebGL_best_practices): agrupar dibujos, trasladar cálculos al vertex shader y evitar lecturas síncronas de GPU en producción.
+- [MDN: requestAnimationFrame](https://developer.mozilla.org/en-US/docs/Web/API/Window/requestAnimationFrame): calcular el avance con el tiempo transcurrido, independiente del número de cuadros.
+- [WebKit: Rendering Frames Timeline](https://webkit.org/blog/3996/introducing-the-rendering-frames-timeline/): medir el tiempo de los cuadros y respetar el presupuesto de aproximadamente 16,7 ms a 60 Hz.
+- [web.dev: Animations and performance](https://web.dev/articles/animations-and-performance/): priorizar transformaciones compuestas para el scroll y evitar trabajo de layout/paint innecesario.
+
+### Validación física pendiente
+
+WebKit en Mac verifica compatibilidad del motor, no temperatura ni FPS en un iPhone 16 Pro. Comparar en Safari real el ciclo completo durante 3–5 minutos, scroll de ida/vuelta, cambio de tema y pausa. El resultado térmico no puede darse por resuelto a partir de estas pruebas locales.

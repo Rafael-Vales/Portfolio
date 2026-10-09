@@ -34,13 +34,13 @@ export default function ParticlePortrait() {
       renderer!.fill(dotBuffers[group], dotCounts[group], color, frameAlpha);
     }
     let flowTime = 0, cycleTime = 0, holdTimer = 0, themeTimer = 0, resizeTimer = 0, basinTimer = 0;
-    let basinY = 0;
+    let basinY = 0, motionBasin = 0, gpuMotion = false;
     const visualViewport = window.visualViewport;
     let builtWidth = 0, builtHeight = 0, lastPaint = 0;
     const compact = window.matchMedia("(max-width: 700px), (pointer: coarse)").matches;
     const animated = renderer.kind === "webgl" || (!compact && !staticFallback);
     stage.dataset.static = String(!animated);
-    const frameInterval = 1000 / (compact ? 24 : 60);
+    const frameInterval = 1000 / 60;
     // Keep fine facial detail on Retina screens; save work by sleeping offscreen
     // and between transformations rather than enlarging a sparse set of dots.
     const canvasDpr = Math.min(window.devicePixelRatio || 1, 2);
@@ -183,7 +183,9 @@ export default function ParticlePortrait() {
     const viewportResize = () => {
       clearTimeout(basinTimer); basinTimer = window.setTimeout(refreshBasin, 100);
     };
-    const introTimeout = window.setTimeout(() => { finishIntro(); wake(); }, 6500);
+    const introTimeout = window.setTimeout(() => {
+      if (intro) { finishIntro(); wake(); }
+    }, 6500);
     dotBuffers = [new Float32Array(loaderCount * 3), new Float32Array(loaderCount * 3), new Float32Array(loaderCount * 3)];
     sizeCanvas();
     readPalette();
@@ -236,6 +238,25 @@ export default function ParticlePortrait() {
       // Bright particles on dark backgrounds describe reflected light, not shadows.
       const logoBlend = phase < 8 ? 0 : phase < 10 ? smooth((phase - 8) / 2) : phase < 16 ? 1 : phase < 18 ? 1 - smooth((phase - 16) / 2) : 0;
       const highlightRadiusBlend = highlightPortrait ? (1 - logoBlend) * (1 - progress) * (intro ? smooth(formation) : 1) : 0;
+      if (gpuMotion) {
+        // Targets stay on the GPU. Every moving frame draws the same particles;
+        // no density swap or spring snap occurs at a phase boundary.
+        renderer!.renderMotion!({
+          width, height, dpr: canvasDpr, phase, intro, introTime, formation,
+          highlights: highlightPortrait, logoBlend, basinOffset: basinY - motionBasin,
+          floor: basinY, loaderSize: Math.min(width * .84, height * .58, 460),
+          baseInk, veeInk, accentInk,
+        });
+        const cycling = animated && !pausedRef.current && !motion.matches;
+        const holding = !intro && (onFloor || phase < 6 || (phase >= 10 && phase < 16));
+        if (cycling && holding) {
+          const boundary = cycleTime < 6 ? 6 : cycleTime < 9 ? 9 : cycleTime < 17 ? 17 : 20;
+          holdTimer = window.setTimeout(() => {
+            holdTimer = 0; cycleTime = boundary; wake();
+          }, (boundary - cycleTime) * 1000);
+        } else if (cycling || intro) frame = requestAnimationFrame(draw);
+        return;
+      }
       dotCounts.fill(0);
       const settle = Math.max(0, Math.min(1, (progress - .65) / .35));
       const navbarFade = settle * settle * (3 - 2 * settle);
@@ -244,12 +265,9 @@ export default function ParticlePortrait() {
       const landing = !intro && progress < .001 && (onFloor || (phase >= 6 && phase < 8) || (phase >= 16 && phase < 18));
       const friction = Math.pow(.8, dt);
       const settledFigure = !intro && progress === 0 && (onFloor || phase < 6 || (phase >= 10 && phase < 16));
-      // Full sampling remains intact for the final figures. Only moving frames
-      // use a bounded subset; stationary mobile figures need no spring loop.
-      const stride = compact && !settledFigure && !pausedRef.current && !motion.matches && !(intro && formation === 0)
-        ? Math.max(1, Math.ceil(dots.length / 8000)) : 1;
+      // Fallback and pointer physics retain a consistent set of particles.
       const count = intro && formation === 0 ? Math.min(loaderCount, dots.length) : dots.length;
-      for (let index = 0; index < count; index += stride) {
+      for (let index = 0; index < count; index++) {
         const p = dots[index];
         // A coherent current bends neighboring particles together instead of random jitter.
         const flow = motion.matches || compact || progress === 1 ? 0 : progress;
@@ -457,6 +475,21 @@ export default function ParticlePortrait() {
         p.y = origin.y + ((highlightPortrait ? p.nightY : p.ty) - origin.y) * t;
       });
       dotBuffers = [new Float32Array(dots.length * 3), new Float32Array(dots.length * 3), new Float32Array(dots.length * 3)];
+      if (compact && animated && renderer!.prepareMotion) {
+        const targets = new Float32Array(dots.length * 20);
+        dots.forEach((p, index) => {
+          const origin = loaderSeeds[index % loaderCount];
+          targets.set([
+            p.tx, p.ty, p.r, p.nightX, p.nightY, p.nightR, p.lx, p.ly, p.logoTone,
+            p.bx, p.by, p.delay, origin.x, origin.y, origin.r, origin.u,
+            p.bend, p.logoV ? 1 : 0, origin.depth, index < loaderCount ? 1 : 0,
+          ], index * 20);
+        });
+        motionBasin = basinY;
+        gpuMotion = renderer!.prepareMotion(targets);
+        if (!gpuMotion) { setStaticFallback(true); return; }
+        canvas!.dataset.motion = "gpu";
+      }
       updateScroll();
       wake();
     }

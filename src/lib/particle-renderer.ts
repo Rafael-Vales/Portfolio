@@ -1,9 +1,13 @@
+import { createParticleMotionRenderer, type ParticleMotionFrame, type ParticleMotionRenderer } from "./particle-motion";
+
 /** One batched GPU draw per ink; the 2D fallback is static on touch devices. */
 export type ParticleRenderer = {
   kind: "webgl" | "2d";
   resize(width: number, height: number, dpr: number): void;
   clear(): void;
   fill(points: Float32Array, count: number, color: string, alpha: number): void;
+  prepareMotion?(targets: Float32Array): boolean;
+  renderMotion?(frame: ParticleMotionFrame): void;
   dispose(): void;
 };
 
@@ -74,6 +78,7 @@ export function createParticleRenderer(canvas: HTMLCanvasElement, forceStatic = 
   gl.enable(gl.BLEND); gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
   gl.clearColor(0, 0, 0, 0);
   let capacity = 0;
+  let motion: ParticleMotionRenderer | null = null;
   const colors = new Map<string, number[]>();
   const probe = document.createElement("canvas").getContext("2d")!;
   function color(value: string) {
@@ -97,12 +102,16 @@ export function createParticleRenderer(canvas: HTMLCanvasElement, forceStatic = 
     kind: "webgl",
     resize(w, h, dpr) {
       canvas.width = Math.round(w * dpr); canvas.height = Math.round(h * dpr);
+      gl.useProgram(program);
       gl.viewport(0, 0, canvas.width, canvas.height);
       gl.uniform2f(viewport, w, h); gl.uniform1f(ratio, dpr);
     },
     clear() { gl.clear(gl.COLOR_BUFFER_BIT); },
     fill(points, count, value, alpha) {
       if (!count) return;
+      gl.useProgram(program); gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+      gl.enableVertexAttribArray(0); gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 0, 0);
+      for (let i = 1; i < 6; i++) gl.disableVertexAttribArray(i);
       if (points.byteLength > capacity) {
         capacity = points.byteLength; gl.bufferData(gl.ARRAY_BUFFER, capacity, gl.DYNAMIC_DRAW);
       }
@@ -111,6 +120,13 @@ export function createParticleRenderer(canvas: HTMLCanvasElement, forceStatic = 
       gl.uniform4f(ink, rgb[0], rgb[1], rgb[2], alpha);
       gl.drawArrays(gl.POINTS, 0, count / 3);
     },
-    dispose() { gl.deleteBuffer(buffer); gl.deleteProgram(program); },
+    prepareMotion(targets) {
+      motion ??= createParticleMotionRenderer(gl, color);
+      if (!motion) return false;
+      motion.prepare(targets);
+      return true;
+    },
+    renderMotion(frame) { motion?.render(frame); },
+    dispose() { motion?.dispose(); gl.deleteBuffer(buffer); gl.deleteProgram(program); },
   };
 }
