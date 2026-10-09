@@ -45,3 +45,7 @@ Referencias: [optimización de canvas](https://developer.mozilla.org/en-US/docs/
 ## Ajuste de definición después de la prueba
 
 La primera reducción a 240 px de muestreo en celular y 360 px en escritorio hacía que los puntos fueran más grandes y se perdieran rasgos. Se aumenta a 360 px en celular y se recuperan los 480 px en escritorio. El canvas vuelve a un límite de DPR 2 en ambos; antes se limitaba a 1,5 en celular. Se mantienen el máximo de 30 redibujados por segundo en celular, las pausas entre figuras, la detención fuera de la portada y los recursos comprimidos. Las cifras de redibujados de la tabla siguen describiendo la inactividad fuera de pantalla; el conteo de operaciones durante la transformación de seis segundos corresponde a la primera versión y no a este ajuste de densidad.
+
+### Segundo ajuste de definición
+
+Se recupera el muestreo de 480 px también en celular, con puntos más pequeños. En el monograma se distribuyen los destinos de forma uniforme antes de repetirlos y se reduce la dispersión de cada punto: mejora la continuidad de los bordes y evita huecos o acumulaciones aleatorias. Se conservan DPR máximo 2, 30 redibujados por segundo en celular y las pausas dentro y fuera de la portada. El consumo durante las transformaciones debe compararse nuevamente en el iPhone; recuperar densidad aumenta el trabajo de esos cuadros respecto de la primera optimización.

@@ -42,7 +42,7 @@ export default function ParticlePortrait() {
     // Keep fine facial detail on Retina screens; save work by sleeping offscreen
     // and between transformations rather than enlarging a sparse set of dots.
     const canvasDpr = Math.min(window.devicePixelRatio || 1, 2);
-    const portraitSampleWidth = compact ? 360 : 480;
+    const portraitSampleWidth = 480;
     let baseInk = "#151515", accentInk = "#6b8876", projectInk = "", highlightPortrait = false;
     function readPalette() {
       const style = getComputedStyle(document.body);
@@ -360,6 +360,12 @@ export default function ParticlePortrait() {
         const coverage = lc.isPointInPath(ribbon, x, y, "evenodd") ? 1.1 : 1;
         if (alpha > .08) logoPoints.push({x,y,tone: Math.sqrt(alpha * coverage), vee: coverage === 1});
       }
+      // Spread particles across the whole monogram before reusing a point.
+      // Random selection with replacement leaves holes and thick clumps.
+      for (let i = logoPoints.length - 1; i > 0; i--) {
+        const j = Math.floor(random() * (i + 1));
+        [logoPoints[i], logoPoints[j]] = [logoPoints[j], logoPoints[i]];
+      }
       const logoSize = Math.min(width * .9, heroRect.height * .98, 820);
       const logoLeft = width / 2 - logoSize / 2;
       const logoTop = heroTop + heroRect.height * .52 - logoSize * (320 / 360) / 2;
@@ -372,9 +378,9 @@ export default function ParticlePortrait() {
         const tx = ox + (x + (random() - .5) * 1.1) * scale;
         const ty = oy + (y + (random() - .5) * 1.1) * scale;
         const nx = -32 + random() * (width + 64), ny = -12 + random() * 164;
-        const lp = logoPoints[Math.floor(random() * logoPoints.length)];
-        const lx = logoLeft + (lp.x + random() * 2) / 360 * logoSize;
-        const ly = logoTop + (lp.y + random() * 2) / 360 * logoSize;
+        const lp = logoPoints[dots.length % logoPoints.length];
+        const lx = logoLeft + (lp.x + (random() - .5) * .65) / 360 * logoSize;
+        const ly = logoTop + (lp.y + (random() - .5) * .65) / 360 * logoSize;
         // A broad, tapered distribution and varying mound height avoid a rectangular pile.
         const normal = Math.sqrt(-2 * Math.log(Math.max(.0001, random()))) * Math.cos(2 * Math.PI * random());
         const bx = width / 2 + Math.tanh(normal * .58) * (width / 2 - 10);
