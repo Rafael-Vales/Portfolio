@@ -35,7 +35,18 @@ export default function ParticlePortrait() {
       ctx!.fillStyle = color;
       ctx!.fill();
     }
-    let flowTime = 0, cycleTime = 0, themeRepaintUntil = 0;
+    let flowTime = 0, cycleTime = 0, holdTimer = 0, themeTimer = 0, resizeTimer = 0;
+    let builtWidth = 0, builtHeight = 0, lastPaint = 0;
+    const compact = window.matchMedia("(max-width: 700px), (pointer: coarse)").matches;
+    const frameInterval = 1000 / (compact ? 30 : 60);
+    let baseInk = "#151515", accentInk = "#6b8876", projectInk = "", highlightPortrait = false;
+    function readPalette() {
+      const style = getComputedStyle(document.body);
+      projectInk = style.getPropertyValue("--particle-ink").trim();
+      baseInk = projectInk || style.getPropertyValue("--portrait-ink").trim() || "#151515";
+      accentInk = style.getPropertyValue("--accent").trim() || "#6b8876";
+      highlightPortrait = style.getPropertyValue("--portrait-highlights").trim() === "1";
+    }
     let returning = false;
     const smooth = (v: number) => { const t = Math.max(0, Math.min(1, v)); return t * t * (3 - 2 * t); };
     const pointer = { x: -1000, y: -1000 };
@@ -65,7 +76,7 @@ export default function ParticlePortrait() {
     if (!Number.isInteger(variantIndex) || variantIndex < 0) variantIndex = 0;
     const variant = variants[variantIndex];
     canvas.dataset.loader = variant.name;
-    const loaderCount = 18000;
+    const loaderCount = compact ? 6000 : 12000;
     let loaderReady = false;
     const noise = (index: number, salt: number) => {
       const value = Math.sin(index * 127.1 + salt * 311.7) * 43758.5453;
@@ -77,7 +88,7 @@ export default function ParticlePortrait() {
       if (disposed) return;
       const sample = document.createElement("canvas");
       const [sx, sy, sw, sh] = variant.crop;
-      sample.width = variant.silhouette ? 420 : Math.min(560, sw); sample.height = Math.round(sample.width * sh / sw);
+      sample.width = variant.silhouette ? 420 : Math.min(compact ? 300 : 560, sw); sample.height = Math.round(sample.width * sh / sw);
       const context = sample.getContext("2d", {willReadFrequently: true});
       if (!context) { finishIntro(); return; }
       if (variant.silhouette) {
@@ -121,7 +132,7 @@ export default function ParticlePortrait() {
       wake();
     };
     loaderImage.onerror = () => { if (!disposed) { finishIntro(); if (loaded) build(); } };
-    if (intro) loaderImage.src = variant.src || "/images/loaders/mar-del-plata-studies.png";
+    if (intro) loaderImage.src = variant.src || "/images/loaders/mar-del-plata-studies.webp";
     function loaderPoint(index: number) {
       const seed = loaderSeeds[index % loaderCount];
       const size = Math.min(width * .84, height * .58, 460);
@@ -135,30 +146,37 @@ export default function ParticlePortrait() {
       return seed.r * Math.min(width * .84, height * .58, 460) / 400 * smooth((introTime / .85 - seed.u) * 6);
     }
     function sizeCanvas() {
-      width = document.documentElement.clientWidth; height = window.innerHeight;
-      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      width = document.documentElement.clientWidth; height = compact ? hero.offsetHeight + 72 : window.innerHeight;
+      const dpr = Math.min(window.devicePixelRatio || 1, compact ? 1.5 : 2);
       canvas!.width = Math.round(width * dpr); canvas!.height = Math.round(height * dpr);
       ctx!.setTransform(dpr, 0, 0, dpr, 0, 0);
+      canvas!.style.height = `${height}px`;
     }
     const introTimeout = window.setTimeout(() => { finishIntro(); wake(); }, 6500);
     sizeCanvas();
+    readPalette();
     function draw(time: number) {
       frame = 0;
       if (disposed || document.hidden || (!loaded && !intro)) return;
+      // The mobile header is opaque: there is no visible portrait left to draw.
+      if (compact && progress === 1) return;
+      if (time - lastPaint < frameInterval - 1) { frame = requestAnimationFrame(draw); return; }
+      const elapsed = Math.min((time - last) / 1000, .1);
+      lastPaint = time;
       const dt = Math.min((time - last) / 16.667 || 1, 2);
       last = time;
       if (intro) {
-        introTime += dt / 60;
+        introTime += elapsed;
         if (motion.matches || window.scrollY > 12) finishIntro();
         else if (loaded && loaderReady && introTime >= 3.1) {
-          formation = Math.min(1, formation + dt / 60 / 1.8);
+          formation = Math.min(1, formation + elapsed / 1.8);
           if (formation > .4) root.dataset.particleIntro = "revealing";
           if (formation >= 1) finishIntro();
         }
       }
       if (!loaded) {
         ctx!.clearRect(0, 0, width, height);
-        ctx!.globalAlpha = .65; ctx!.fillStyle = getComputedStyle(document.body).getPropertyValue("--portrait-ink").trim() || "#151515";
+        ctx!.globalAlpha = .65; ctx!.fillStyle = baseInk;
         ctx!.beginPath();
         for (let i = 0; i < loaderCount; i++) {
           const p = loaderPoint(i);
@@ -170,8 +188,8 @@ export default function ParticlePortrait() {
         return;
       }
       if (!motion.matches && !pausedRef.current) {
-        flowTime += dt / 60;
-        if (!intro && progress < .001) cycleTime = (cycleTime + dt / 60) % 22;
+        if (intro || progress < .001) flowTime += elapsed;
+        if (!intro && progress < .001) cycleTime = (cycleTime + elapsed) % 22;
       }
       if (motion.matches) cycleTime = 0;
       // Hold each settled pile for one second without slowing the other stages.
@@ -179,14 +197,11 @@ export default function ParticlePortrait() {
       const phase = cycleTime < 8 ? cycleTime : cycleTime < 9 ? 8 : cycleTime < 19 ? cycleTime - 1 : cycleTime < 20 ? 18 : cycleTime - 2;
       canvas!.dataset.phase = intro ? (formation > 0 ? "opening-portrait" : "loading") : onFloor ? "floor-hold" : phase < 6 ? "portrait" : phase < 8 ? "fall-to-logo" : phase < 10 ? "form-logo" : phase < 16 ? "logo" : phase < 18 ? "fall-to-portrait" : "form-portrait";
       ctx!.clearRect(0, 0, width, height);
-      const pageStyle = getComputedStyle(document.body);
-      const baseInk = pageStyle.getPropertyValue("--particle-ink").trim() || pageStyle.getPropertyValue("--portrait-ink").trim() || "#151515";
       const logoColorBlend = (phase < 8 ? 0 : phase < 10 ? smooth((phase - 8) / 2) : phase < 16 ? 1 : phase < 18 ? 1 - smooth((phase - 16) / 2) : 0) * (1 - progress);
       const portraitTone = root.dataset.theme === "dark" ? 220 : 21;
       const greenInk = [107, 136, 118].map(value => Math.round(portraitTone + (value - portraitTone) * logoColorBlend));
-      const veeInk = pageStyle.getPropertyValue("--particle-ink").trim() || `rgb(${greenInk.join(",")})`;
+      const veeInk = projectInk || `rgb(${greenInk.join(",")})`;
       // Bright particles on dark backgrounds describe reflected light, not shadows.
-      const highlightPortrait = pageStyle.getPropertyValue("--portrait-highlights").trim() === "1";
       const logoBlend = phase < 8 ? 0 : phase < 10 ? smooth((phase - 8) / 2) : phase < 16 ? 1 : phase < 18 ? 1 - smooth((phase - 16) / 2) : 0;
       const highlightRadiusBlend = highlightPortrait ? (1 - logoBlend) * (1 - progress) * (intro ? smooth(formation) : 1) : 0;
       dotCounts.fill(0);
@@ -195,11 +210,13 @@ export default function ParticlePortrait() {
       ctx!.globalAlpha = (1 - progress * .18) * (1 - navbarFade * .58);
       ctx!.beginPath();
       let moving = false;
-      for (const [index, p] of dots.entries()) {
+      const friction = Math.pow(.8, dt);
+      for (let index = 0; index < dots.length; index++) {
+        const p = dots[index];
         // A coherent current bends neighboring particles together instead of random jitter.
-        const flow = motion.matches ? 0 : progress;
-        const driftX = Math.sin(flowTime * .38 + p.nx * .004 + p.ny * .035) * 22 * flow;
-        const driftY = Math.sin(flowTime * .55 + p.nx * .009) * 4.5 * flow;
+        const flow = motion.matches || compact || progress === 1 ? 0 : progress;
+        const driftX = flow ? Math.sin(flowTime * .38 + p.nx * .004 + p.ny * .035) * 22 * flow : 0;
+        const driftY = flow ? Math.sin(flowTime * .55 + p.nx * .009) * 4.5 * flow : 0;
         const portraitX = highlightPortrait ? p.nightX : p.tx;
         const portraitY = highlightPortrait ? p.nightY : p.ty;
         let hx = portraitX, hy = portraitY;
@@ -215,7 +232,7 @@ export default function ParticlePortrait() {
           hx = p.bx + (p.lx - p.bx) * t + Math.sin(t * Math.PI) * p.bend;
           hy = p.by + (p.ly - p.by) * t;
         } else if (phase >= 10 && phase < 16) {
-          hx = p.lx; hy = p.ly + (motion.matches || pausedRef.current ? 0 : Math.sin(flowTime * .8) * 1.5);
+          hx = p.lx; hy = p.ly;
         } else if (phase >= 16 && phase < 18) {
           const t = Math.max(0, Math.min(1, (phase - 16 - p.delay) / (2 - p.delay)));
           const landing = Math.min(1, t / .78);
@@ -238,7 +255,7 @@ export default function ParticlePortrait() {
         const ty = hy + (p.ny + driftY - hy) * progress;
         if (!motion.matches) {
           const dx = p.x - pointer.x, dy = p.y - pointer.y;
-          const distance = Math.hypot(dx, dy);
+          const distance = compact ? Infinity : Math.hypot(dx, dy);
           const radius = Math.min(width * .18, 85);
           let fx = 0, fy = 0;
           if (!intro && distance < radius && progress < .9) {
@@ -246,8 +263,8 @@ export default function ParticlePortrait() {
             fx = dx / (distance || 1) * force;
             fy = dy / (distance || 1) * force;
           }
-          p.vx = (p.vx + ((tx - p.x) * .035 + fx) * dt) * Math.pow(.8, dt);
-          p.vy = (p.vy + ((ty - p.y) * .035 + fy) * dt) * Math.pow(.8, dt);
+          p.vx = (p.vx + ((tx - p.x) * .035 + fx) * dt) * friction;
+          p.vy = (p.vy + ((ty - p.y) * .035 + fy) * dt) * friction;
           p.x += p.vx * dt; p.y += p.vy * dt;
           if (Math.abs(p.x - tx) + Math.abs(p.y - ty) + Math.abs(p.vx) + Math.abs(p.vy) > .08) moving = true;
         } else { p.x = tx; p.y = ty; }
@@ -275,23 +292,38 @@ export default function ParticlePortrait() {
       }
       fillDots(1, veeInk);
       fillDots(0, baseInk);
-      fillDots(2, pageStyle.getPropertyValue("--accent").trim() || "#6b8876");
-      if (((moving || !pausedRef.current) && !motion.matches) || time < themeRepaintUntil) frame = requestAnimationFrame(draw);
+      fillDots(2, accentInk);
+      const cycling = !pausedRef.current && !motion.matches && progress < .001;
+      // Settled portraits/logos remain on the canvas without a render loop.
+      if (!intro && !moving && cycling && (phase < 6 || (phase >= 10 && phase < 16) || onFloor)) {
+        const boundary = cycleTime < 6 ? 6 : cycleTime < 9 ? 9 : cycleTime < 17 ? 17 : 20;
+        holdTimer = window.setTimeout(() => { holdTimer = 0; cycleTime = boundary; wake(); }, (boundary - cycleTime) * 1000);
+      } else if (intro || (!motion.matches && (moving || cycling))) frame = requestAnimationFrame(draw);
     }
-    function wake() { if (!frame && (loaded || intro) && !document.hidden) { last = performance.now(); frame = requestAnimationFrame(draw); } }
+    function wake() {
+      clearTimeout(holdTimer); holdTimer = 0;
+      if (!frame && (loaded || intro) && !document.hidden && !(compact && progress === 1)) {
+        last = performance.now(); lastPaint = 0; frame = requestAnimationFrame(draw);
+      }
+    }
     function build() {
       if (!loaded || disposed || (intro && !loaderReady)) return;
       const rect = stage.getBoundingClientRect();
+      // Safari's browser chrome can change viewport height during a swipe.
+      // Re-sample only for a real layout change, not each toolbar movement.
+      if (builtWidth === rect.width && (compact || builtHeight === rect.height)) return;
+      builtWidth = rect.width; builtHeight = rect.height;
       const heroRect = hero.getBoundingClientRect();
       heroTop = heroRect.top + window.scrollY;
       range = heroRect.height * .7;
-      width = document.documentElement.clientWidth; height = window.innerHeight;
+      width = document.documentElement.clientWidth; height = compact ? hero.offsetHeight + 72 : window.innerHeight;
       if (!width || !height) return;
-      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      const dpr = Math.min(window.devicePixelRatio || 1, compact ? 1.5 : 2);
       canvas!.width = Math.round(width * dpr); canvas!.height = Math.round(height * dpr);
       ctx!.setTransform(dpr, 0, 0, dpr, 0, 0);
+      canvas!.style.height = `${height}px`;
       const sample = document.createElement("canvas");
-      sample.width = 480; sample.height = Math.round(sample.width * source.height / source.width);
+      sample.width = compact ? 240 : 360; sample.height = Math.round(sample.width * source.height / source.width);
       const sc = sample.getContext("2d", { willReadFrequently: true });
       if (!sc) return;
       sc.drawImage(source, 0, 0, sample.width, sample.height);
@@ -368,7 +400,6 @@ export default function ParticlePortrait() {
         p.nightY = oy + (point.y + (noise(index, 21) - .5) * 1.1) * scale;
         p.nightR = (.22 + .65 * Math.sqrt(point.tone)) * scale;
       });
-      const highlightPortrait = getComputedStyle(document.body).getPropertyValue("--portrait-highlights").trim() === "1";
       if (intro) dots.forEach((p, index) => {
         const origin = loaderPoint(index);
         const t = smooth(formation);
@@ -377,32 +408,46 @@ export default function ParticlePortrait() {
       });
       dotBuffers = [new Float64Array(dots.length * 3), new Float64Array(dots.length * 3), new Float64Array(dots.length * 3)];
       updateScroll();
+      wake();
     }
     function updateScroll() {
       const raw = Math.max(0, Math.min(1, (window.scrollY - heroTop + 72) / range));
       if (raw > .001) { returning = true; finishIntro(); }
       if (raw <= .001 && returning) { cycleTime = 0; returning = false; }
-      progress = motion.matches ? (raw >= .5 ? 1 : 0) : raw * raw * (3 - 2 * raw);
+      const next = motion.matches ? (raw >= .5 ? 1 : 0) : raw * raw * (3 - 2 * raw);
+      if (next === progress) return;
+      progress = next;
       stage.style.setProperty("--navbar-progress", String(progress));
-      wake();
+      canvas!.dataset.docked = String(progress === 1);
+      if (compact && progress === 1) {
+        cancelAnimationFrame(frame); frame = 0; clearTimeout(holdTimer); holdTimer = 0;
+        ctx!.clearRect(0, 0, width, height);
+      } else wake();
     }
-    const move = (e: PointerEvent) => { if (motion.matches) return; pointer.x = e.clientX; pointer.y = e.clientY; wake(); };
+    const move = (e: PointerEvent) => { if (motion.matches || progress === 1) return; pointer.x = e.clientX; pointer.y = e.clientY; wake(); };
     const leave = () => { pointer.x = pointer.y = -1000; wake(); };
     const resume = () => wake();
-    const visibility = () => { if (document.hidden) { cancelAnimationFrame(frame); frame = 0; } else wake(); };
-    const themeObserver = new MutationObserver(() => { themeRepaintUntil = performance.now() + 1000; if (!frame) { last = performance.now(); frame = requestAnimationFrame(draw); } });
+    const visibility = () => { if (document.hidden) { cancelAnimationFrame(frame); frame = 0; clearTimeout(holdTimer); } else wake(); };
+    const themeObserver = new MutationObserver(() => {
+      readPalette(); wake();
+      clearTimeout(themeTimer);
+      themeTimer = window.setTimeout(() => { readPalette(); wake(); }, 750);
+    });
     themeObserver.observe(root, {attributes:true, attributeFilter:["data-project-theme", "data-theme"]});
-    const resize = new ResizeObserver(build);
+    const resize = new ResizeObserver(() => {
+      clearTimeout(resizeTimer); resizeTimer = window.setTimeout(build, 120);
+    });
+    const rebuild = () => { builtWidth = 0; build(); };
     source.onload = () => { loaded = true; build(); };
     source.onerror = () => { if (!disposed) { finishIntro(); ctx.clearRect(0, 0, width, height); setFailed(true); } };
-    source.src = "/images/rafael/portrait-source.png";
+    source.src = "/images/rafael/portrait-source.webp";
     wake();
     resize.observe(stage);
     canvas.addEventListener("resume-particles", resume);
     window.addEventListener("scroll", updateScroll, { passive: true });
-    window.addEventListener("pointermove", move); window.addEventListener("pointerleave", leave); window.addEventListener("pointerup", leave);
-    motion.addEventListener("change", build); document.addEventListener("visibilitychange", visibility);
-    return () => { disposed = true; clearTimeout(introTimeout); finishIntro(); canvas.removeEventListener("resume-particles", resume); cancelAnimationFrame(frame); resize.disconnect(); themeObserver.disconnect(); window.removeEventListener("scroll", updateScroll); window.removeEventListener("pointermove", move); window.removeEventListener("pointerleave", leave); window.removeEventListener("pointerup", leave); motion.removeEventListener("change", build); document.removeEventListener("visibilitychange", visibility); };
+    if (!compact) { window.addEventListener("pointermove", move, {passive: true}); window.addEventListener("pointerleave", leave); window.addEventListener("pointerup", leave); }
+    motion.addEventListener("change", rebuild); document.addEventListener("visibilitychange", visibility);
+    return () => { disposed = true; clearTimeout(introTimeout); clearTimeout(holdTimer); clearTimeout(themeTimer); clearTimeout(resizeTimer); finishIntro(); canvas.removeEventListener("resume-particles", resume); cancelAnimationFrame(frame); resize.disconnect(); themeObserver.disconnect(); window.removeEventListener("scroll", updateScroll); window.removeEventListener("pointermove", move); window.removeEventListener("pointerleave", leave); window.removeEventListener("pointerup", leave); motion.removeEventListener("change", rebuild); document.removeEventListener("visibilitychange", visibility); };
   }, []);
   return <div className="portrait-stage"><button type="button" className="particle-toggle" aria-pressed={paused} aria-label={paused ? t("Reanudar animación") : t("Pausar animación")} onClick={() => { pausedRef.current = !pausedRef.current; setPaused(pausedRef.current); ref.current?.dispatchEvent(new Event("resume-particles")); }}>{paused ? t("Reanudar") : t("Pausar")}</button><canvas ref={ref} role="img" aria-label={t("Partículas que alternan entre el retrato de Rafael Vales y su monograma RV")} />{failed && <p className="portrait-error">Rafael Vales</p>}</div>;
 }

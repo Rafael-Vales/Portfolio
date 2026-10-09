@@ -54,13 +54,13 @@ export default function ProjectColorPaint({ color, origin, onComplete }: { color
   useLayoutEffect(() => {
     let frame = 0, completed = false;
     const start = performance.now();
+    const width = document.documentElement.clientWidth, height = window.innerHeight;
+    svg.current?.setAttribute("viewBox", `0 0 ${width} ${height}`);
+    navbarSvg.current?.setAttribute("viewBox", `0 0 ${width} ${height}`);
     const root = document.documentElement;
     oldVeil.current?.setAttribute("fill", getComputedStyle(document.body).backgroundColor);
     root.dataset.projectSpread = "true";
     function draw(now: number) {
-      const width = document.documentElement.clientWidth, height = window.innerHeight;
-      svg.current?.setAttribute("viewBox", `0 0 ${width} ${height}`);
-      navbarSvg.current?.setAttribute("viewBox", `0 0 ${width} ${height}`);
       const progress = Math.min(1, (now - start) / PAINT_SPREAD_MS);
       const shape = liquidPath(origin, width, height, progress);
       path.current?.setAttribute("d", shape.path);

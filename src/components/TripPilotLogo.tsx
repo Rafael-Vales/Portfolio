@@ -1,7 +1,10 @@
+"use client";
+import useVisibleAnimation from "./useVisibleAnimation";
 import { useId } from "react";
 export default function TripPilotLogo() {
  const id=useId();
-  return <svg className="trip-card-logo" viewBox="0 0 1024 1024" aria-hidden="true">
+ const ref=useVisibleAnimation<SVGSVGElement>();
+  return <svg ref={ref} className="trip-card-logo" viewBox="0 0 1024 1024" aria-hidden="true">
     <defs>
       <mask id={`${id}-orbit`}>
         <rect width="1024" height="1024" fill="white" />

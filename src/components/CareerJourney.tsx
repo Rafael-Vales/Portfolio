@@ -70,37 +70,45 @@ const chapters = [
     const rail = track.current;
     if (!element || !rail) return;
     const motion = matchMedia("(prefers-reduced-motion: reduce)");
-    let frame = 0;
-    let current = -1;
+    let frame = 0, current = -1, visible = false;
+    let positions: number[] = [], lastProgress = -1;
+    function measure() {
+      positions = markers.current.map(marker => {
+        const box = marker?.getBoundingClientRect();
+        return box ? box.top + window.scrollY + box.height / 2 : 0;
+      });
+      rail!.style.setProperty("--journey-length", `${Math.max(0, positions.at(-1)! - positions[0])}px`);
+      paint();
+    }
     function paint() {
       frame = 0;
-      const positions = markers.current.map(marker => {
-        const box = marker?.getBoundingClientRect();
-        return box ? box.top + box.height / 2 : 0;
-      });
-      const first = positions[0];
-      const last = positions[positions.length - 1];
-      rail!.style.setProperty("--journey-length", `${Math.max(0, last - first)}px`);
-      const focus = window.innerHeight * .48;
-      const progress = Math.max(0, Math.min(1, (focus - first) / Math.max(1, last - first)));
-      rail!.style.setProperty("--journey-progress", String(motion.matches ? 1 : progress));
+      if (!positions.length) return;
+      const first = positions[0], last = positions[positions.length - 1];
+      const focus = window.scrollY + window.innerHeight * .48;
+      const progress = motion.matches ? 1 : Math.max(0, Math.min(1, (focus - first) / Math.max(1, last - first)));
+      if (progress !== lastProgress) { lastProgress = progress; rail!.style.setProperty("--journey-progress", String(progress)); }
       let next = 0;
       positions.forEach((top, index) => { if (top <= focus + 28) next = index; });
       if (next !== current) { current = next; setActive(next); }
     }
-    function schedule() { if (!frame) frame = requestAnimationFrame(paint); }
-    const observer = new ResizeObserver(schedule);
+    function schedule() { if (visible && !frame) frame = requestAnimationFrame(paint); }
+    // Marker geometry changes with layout, not with scroll. Avoid six forced
+    // layout reads on every swipe, including while the timeline is off screen.
+    const observer = new ResizeObserver(measure);
     observer.observe(element);
+    observer.observe(document.querySelector("main")!);
+    const intersection = new IntersectionObserver(([entry]) => { visible = entry.isIntersecting; if (visible) measure(); }, {rootMargin: "100px"});
+    intersection.observe(element);
     window.addEventListener("scroll", schedule, { passive: true });
     window.addEventListener("resize", schedule);
-    motion.addEventListener("change", schedule);
-    schedule();
+    motion.addEventListener("change", measure);
+    measure();
     return () => {
       cancelAnimationFrame(frame);
-      observer.disconnect();
+      observer.disconnect(); intersection.disconnect();
       window.removeEventListener("scroll", schedule);
       window.removeEventListener("resize", schedule);
-      motion.removeEventListener("change", schedule);
+      motion.removeEventListener("change", measure);
     };
   }, []);
 

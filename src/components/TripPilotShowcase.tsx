@@ -24,6 +24,7 @@ const slides: Slide[] = [
   const [index, setIndex] = useState(0);
   const [paused, setPaused] = useState(false);
   const [reduced, setReduced] = useState(false);
+  const [manualVideo, setManualVideo] = useState(true);
   const [visible, setVisible] = useState(false);
   const [focused, setFocused] = useState(false);
   const container = useRef<HTMLDivElement>(null);
@@ -36,7 +37,7 @@ const slides: Slide[] = [
   }, []);
   useEffect(() => {
     const media = matchMedia("(prefers-reduced-motion: reduce)");
-    const sync = () => setReduced(media.matches);
+    const sync = () => { setReduced(media.matches); setManualVideo(matchMedia("(pointer: coarse)").matches); };
     sync(); media.addEventListener("change", sync);
     return () => media.removeEventListener("change", sync);
   }, []);
@@ -57,11 +58,13 @@ const slides: Slide[] = [
   useEffect(() => {
     const element = video.current;
     if (!element) return;
+    if (!active || !visible || !pageVisible || paused) { element.pause(); return; }
+    if (manualVideo) return;
     if (playing) {
       if (element.ended) element.currentTime = 0;
       void element.play().catch(() => { /* Native controls remain available if autoplay is blocked. */ });
     } else element.pause();
-  }, [playing, index]);
+  }, [playing, index, active, visible, pageVisible, manualVideo, paused]);
   return <div ref={container} className="trip-project-content trip-showcase" role="region" aria-label={t("Funciones de TripPilot")} aria-roledescription={t("carrusel", "carousel")}
     onFocusCapture={() => setFocused(true)} onBlurCapture={event => { if (!event.currentTarget.contains(event.relatedTarget)) setFocused(false); }}>
     <div className="trip-project-copy">
@@ -82,8 +85,8 @@ const slides: Slide[] = [
     </div>
     <div className="trip-showcase-phone">
       {slides.map((item, i) => <div key={item.image} className="trip-showcase-frame" data-current={i === index} aria-hidden={i !== index}>
-        {item.video ? (i === index && <video ref={video} key={item.video} src={`/videos/trippilot/${item.video}.mp4`} muted playsInline controls preload="metadata" aria-label={item.alt} onEnded={() => { if (playing) setIndex(value => (value + 1) % slides.length); }} />) :
-        <Image src={`/images/trippilot/demo-${item.image}.png`} width={1206} height={2622} alt={item.alt} sizes="(max-width: 700px) 65vw, 300px" loading="eager" />}
+        {item.video ? (i === index && <video ref={video} key={item.video} src={`/videos/trippilot/${item.video}.mp4`} muted playsInline controls preload="none" poster={`/images/trippilot/video-${item.video}.webp`} aria-label={item.alt} onEnded={() => { if (playing) setIndex(value => (value + 1) % slides.length); }} />) :
+        ((i === index || i === (index + 1) % slides.length) && <Image src={`/images/trippilot/demo-${item.image}.png`} width={1206} height={2622} alt={item.alt} sizes="(max-width: 700px) 65vw, 300px" loading="eager" />)}
       </div>)}
     </div>
   </div>;

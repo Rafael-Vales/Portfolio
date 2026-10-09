@@ -977,3 +977,16 @@ main.container, .footer { position: relative; z-index: 1; }
   .mobile-navigation:not([hidden]) { animation: none; }
   .project-name-card { transition: none; }
 }
+
+/* Animate only visible emblems; off-screen sections should be idle. */
+.project-front[inert] .trip-logo-plane-orbit,
+.project-front[inert] .trip-logo-occlusion,
+.project-front[inert] .animal-logo-dog,
+.project-front[inert] .animal-logo-paw { animation-play-state: paused; }
+.trip-card-logo:not([data-animating="true"]) .trip-logo-plane-orbit,
+.trip-card-logo:not([data-animating="true"]) .trip-logo-occlusion,
+.animal-logo:not([data-animating="true"]) .animal-logo-dog,
+.animal-logo:not([data-animating="true"]) .animal-logo-paw { animation-play-state: paused; }
+@media (max-width: 700px) {
+  .portrait-stage canvas[data-docked="true"] { visibility: hidden; }
+}
