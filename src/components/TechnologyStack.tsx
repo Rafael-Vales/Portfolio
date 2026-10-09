@@ -60,7 +60,7 @@ const groups = [
     buttons.current[next]?.focus();
   }
 
-  return <section className="technology-stack" aria-labelledby="stack-title">
+  return <section id="stack" className="technology-stack" aria-labelledby="stack-title">
     <div className="stack-introduction">
       <span className="stack-eyebrow">{t("Herramientas")}</span>
       <h3 id="stack-title">{t("Mi stack.")}</h3>
@@ -96,5 +96,6 @@ const groups = [
       <div className="stack-used-in" key={chosen}><span>{t("Usé", "I used")} {chosen} {t("en", "in")}</span><div className="stack-project-links">{(chosen === "Dexie.js" ? [{name:"Mercado Williams",href:"#recorrido-mercado-williams"}] : ["Swift","SwiftUI","SwiftData","MapKit","WidgetKit"].includes(chosen) ? [{name:"TripPilot",href:"?project=trippilot#proyectos"}] : chosen === "Supabase" ? [{name:"Dividamos",href:"#recorrido-dividamos"},{name:"Mercado Williams",href:"#recorrido-mercado-williams"}] : chosen === "Zustand" ? [{name:"Animal Feed",href:"?project=animal-feed#proyectos"}] : [{name:"Animal Feed",href:"?project=animal-feed#proyectos"}]).map(project=><a key={project.name} href={project.href}>{project.name} <span aria-hidden="true">↗</span></a>)}</div></div>
       <p className="stack-description">{group.description}</p>
     </div>
+    <a className="mobile-primary-action" href="#recorrido">{t("Conocé mi recorrido", "Explore my journey")} <span aria-hidden="true">↓</span></a>
   </section>;
 }

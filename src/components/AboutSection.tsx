@@ -9,9 +9,9 @@ import TechnologyStack from "@/components/TechnologyStack";
 export default function AboutSection() {
   const {t}=useLocale();
 const approach = [
-  { title: t("Diseño"), description: t("Jerarquía, espacio y claridad. Cada decisión visual tiene que ayudar a entender y usar el producto.") },
-  { title: "Frontend", description: t("Interacciones fluidas y detalles cuidados. Me interesa tanto lo que se ve como lo que pasa al tocarlo.") },
-  { title: t("Producto"), description: t("Una mirada fullstack para conectar la interfaz con lo que necesita para funcionar.") },
+  { short: t("Jerarquía, espacio y claridad.", "Hierarchy, space and clarity."), title: t("Diseño"), description: t("Jerarquía, espacio y claridad. Cada decisión visual tiene que ayudar a entender y usar el producto.") },
+  { short: t("Interacciones fluidas y detalles cuidados.", "Fluid interactions and thoughtful details."), title: "Frontend", description: t("Interacciones fluidas y detalles cuidados. Me interesa tanto lo que se ve como lo que pasa al tocarlo.") },
+  { short: t("La interfaz conectada con lo que la hace funcionar.", "An interface connected to what makes it work."), title: t("Producto"), description: t("Una mirada fullstack para conectar la interfaz con lo que necesita para funcionar.") },
 ];
 
   const section = useRef<HTMLElement>(null);
@@ -30,7 +30,7 @@ const approach = [
   }, []);
 
   return <section ref={section} id="sobre-mi" className="about about-editorial" aria-labelledby="about-title">
-    <div className="about-section-label"><span>{t("Sobre mí")}</span><span>Mar del Plata, Argentina</span></div>
+    <div className="about-overview"><div className="about-section-label"><span>{t("Sobre mí")}</span><span>Mar del Plata, Argentina</span></div>
     <div className="about-introduction about-reveal">
       <h2 id="about-title">{t("Diseñar con criterio.")}<br /><span>{t("Construir con detalle.")}</span></h2>
       <div className="about-bio">
@@ -42,10 +42,11 @@ const approach = [
     <div className="about-approach" aria-label={t("Mi forma de trabajar")}>
       {approach.map((item, index) => <div className="about-principle about-reveal" key={item.title} style={{ transitionDelay: `${120 + index * 90}ms` }}>
         <span className="about-principle-number" aria-hidden="true">0{index + 1}</span>
-        <h3>{item.title}</h3><p>{item.description}</p>
+        <h3>{item.title}</h3><p><span className="about-description-desktop">{item.description}</span><span className="about-description-mobile">{item.short}</span></p>
       </div>)}
     </div>
-    <div className="about-languages"><span>{t("También, más allá del código.")}</span><p>{t("Español nativo")}<span aria-hidden="true">·</span>{t("Inglés avanzado")}<strong>C1</strong></p></div>
+    <div className="about-languages"><span className="about-mobile-location">Mar del Plata, Argentina</span><span>{t("También, más allá del código.")}</span><p>{t("Español nativo")}<span aria-hidden="true">·</span>{t("Inglés avanzado")}<strong>C1</strong></p></div>
+    <a className="mobile-primary-action" href="#stack">{t("Conocé mi stack", "Explore my stack")} <span aria-hidden="true">↓</span></a></div>
     <TechnologyStack />
     <div className="about-signoff"><span>{t("Una idea, cada detalle.")}</span><a href="#recorrido">{t("Conocé mi recorrido")}<span aria-hidden="true">↘</span></a></div>
   </section>;
