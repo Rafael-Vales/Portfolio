@@ -6,7 +6,7 @@ export default function ScrollName() {
   const ref = useRef<HTMLHeadingElement>(null);
   useLayoutEffect(() => {
     const name = ref.current;
-    const hero = name?.closest<HTMLElement>(".hero");
+    const hero = document.querySelector<HTMLElement>(".hero");
     const target = document.querySelector<HTMLElement>(".wordmark-slot");
     if (!name || !hero || !target) return;
     const reduce = matchMedia("(prefers-reduced-motion: reduce)");

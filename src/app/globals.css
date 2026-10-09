@@ -87,9 +87,9 @@ nav a:hover { color: #121510; text-decoration: underline; text-underline-offset:
 
 .wordmark-slot { visibility: hidden; }
 .header { opacity: 1; }
-.hero h1.scroll-name { position: fixed; z-index: 30; top: 0; left: 0; width: max-content; max-width: none; margin: 0; font-size: clamp(80px, 15.3vw, 220px); font-weight: 500; letter-spacing: -.07em; line-height: .95; white-space: nowrap; transform-origin: top left; will-change: transform; }
+.scroll-name { position: fixed; z-index: 30; top: 0; left: 0; width: max-content; max-width: none; margin: 0; font-size: clamp(80px, 15.3vw, 220px); font-weight: 500; letter-spacing: -.07em; line-height: .95; white-space: nowrap; transform-origin: top left; will-change: transform; }
 .scroll-name span { color: var(--accent); }
-@media (max-width: 700px) { .hero h1.scroll-name { font-size: 15vw; } }
+@media (max-width: 700px) { .scroll-name { font-size: 15vw; } }
 
 /* The portrait particles travel in viewport space into the navigation. */
 .portrait-stage { z-index: auto; pointer-events: none; }
@@ -251,9 +251,9 @@ main.container, .footer { position: relative; z-index: 1; }
 
 
 /* Particle opening: reveal the interface as the cloud becomes the portrait. */
-.header, .hero .scroll-name, .hero-bottom, .particle-toggle { transition: opacity 650ms ease; }
+.header, .scroll-name, .hero-bottom, .particle-toggle { transition: opacity 650ms ease; }
 :root[data-particle-intro="loading"] .header,
-:root[data-particle-intro="loading"] .hero .scroll-name,
+:root[data-particle-intro="loading"] .scroll-name,
 :root[data-particle-intro="loading"] .hero-bottom,
 :root[data-particle-intro] .particle-toggle { opacity: 0; visibility: hidden; pointer-events: none; }
 
@@ -803,7 +803,7 @@ main.container, .footer { position: relative; z-index: 1; }
 
 /* Mobile reading path: compact navigation, a centered project rail and natural case heights. */
 .header-desktop-controls { display: flex; align-items: center; margin-left: auto; }
-.mobile-wordmark, .mobile-menu-toggle, .mobile-navigation, .gallery-arrow, .gallery-progress { display: none; }
+.mobile-menu-toggle, .mobile-navigation, .gallery-arrow, .gallery-progress { display: none; }
 .project-gallery-carousel { flex: 1; min-width: 0; display: flex; }
 
 @media (max-width: 700px) {
@@ -813,8 +813,6 @@ main.container, .footer { position: relative; z-index: 1; }
   .header { z-index: 40; background: var(--background); border-bottom: 1px solid var(--line); }
   .header-inner { position: relative; height: 72px; gap: 0; }
   .header-desktop-controls { display: none; }
-  .mobile-wordmark { display: inline-flex; align-items: center; min-height: 44px; position: absolute; left: 0; font-size: 17px; }
-  .mobile-wordmark > span { color: var(--accent-text); }
   .mobile-menu-toggle { display: inline-flex; align-items: center; gap: 10px; min-width: 88px; min-height: 44px; padding: 0 14px; border: 1px solid var(--line); border-radius: 999px; background: transparent; color: var(--foreground); font: inherit; font-size: 12px; cursor: pointer; }
   .mobile-menu-toggle > span { font-size: 22px; font-weight: 300; line-height: 1; }
   .mobile-navigation:not([hidden]) { display: block; position: absolute; top: 100%; inset-inline: 0; max-height: calc(100dvh - 88px); overflow-y: auto; background: var(--background); border-bottom: 1px solid var(--line); box-shadow: 0 24px 32px -24px #0004; padding-block: 12px 22px; animation: decision-reveal 180ms ease both; }
@@ -828,13 +826,13 @@ main.container, .footer { position: relative; z-index: 1; }
   .mobile-preferences .language-switch a { min-width: 40px; min-height: 40px; }
   .mobile-menu-toggle:focus-visible, .gallery-arrow:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
   .portrait-stage::before { height: 102px; background: linear-gradient(var(--background) 0 72px, transparent 102px); }
-  .hero { height: calc(100svh - 72px); min-height: 540px; max-height: 850px; }
+  .hero { height: calc(100svh - 72px); min-height: min(540px, calc(100svh - 72px)); max-height: 850px; }
   .hero .hero-positioning { top: 24px; max-width: 270px; font-size: 15px; line-height: 1.5; }
-  .hero h1.scroll-name { font-size: 15vw; transition: opacity 180ms ease; }
-  .hero h1.scroll-name[data-docked="true"] { opacity: 0; pointer-events: none; }
-  .portrait-stage { width: 100%; height: 74%; bottom: 78px; left: 0; }
+  .scroll-name { font-size: 15vw; transition: opacity 180ms ease; }
+  .scroll-name { z-index: 41; }
+  .portrait-stage { width: 100%; height: 74%; bottom: 122px; left: 0; }
   .particle-toggle { bottom: -28px; min-height: 44px; }
-  .hero-bottom { bottom: max(12px, env(safe-area-inset-bottom)); gap: 14px; font-size: 10px; }
+  .hero-bottom { bottom: max(76px, calc(env(safe-area-inset-bottom) + 68px)); gap: 14px; font-size: 10px; }
   .hero-bottom a { gap: 8px; font-size: 12px; }
 
   #proyectos { min-height: 0; scroll-margin-top: 72px; }
@@ -993,3 +991,10 @@ main.container, .footer { position: relative; z-index: 1; }
 
 /* Keep the particle floor above display cutouts and the home indicator. */
 .portrait-stage { --particle-safe-bottom: env(safe-area-inset-bottom, 0px); }
+
+/* Leave a landing strip beneath the controls, while keeping every point visible. */
+@media (min-width: 701px) {
+  .hero-bottom { bottom: max(76px, calc(env(safe-area-inset-bottom) + 68px)); }
+  .portrait-stage { bottom: 82px; }
+}
+.portrait-stage[data-static="true"] .particle-toggle { display: none; }

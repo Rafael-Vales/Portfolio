@@ -32,7 +32,6 @@ export default function PortfolioHeader() {
   return <header ref={header} className="header" data-menu-open={open}>
     <div className="container header-inner">
       <span className="wordmark wordmark-slot" aria-hidden="true">Rafael Vales</span>
-      <a className="mobile-wordmark wordmark" href="#contenido" onClick={() => setOpen(false)}>Rafael Vales<span>.</span></a>
       <div className="header-desktop-controls">
         <nav aria-label={t("Navegación principal")}>
           <a href="#proyectos">{t("Proyectos")}</a><a href="#sobre-mi">{t("Sobre mí")}</a><a href="#contacto">{t("Contacto")}</a>

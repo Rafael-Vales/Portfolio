@@ -53,3 +53,49 @@ Se recupera el muestreo de 480 px también en celular, con puntos más pequeños
 ## Piso de partículas adaptable
 
 La pila se posiciona dentro del viewport visual y por encima de Pausar y los enlaces inferiores, respetando el área segura. Se limita el rebote de los resortes para que no atraviese el piso. Los cambios de altura de las barras de Safari desplazan únicamente los destinos de caída, con un ajuste agrupado; no reconstruyen ni vuelven a muestrear el retrato. Los cambios de ancho continúan reconstruyendo la composición.
+
+
+## Revisión de temperatura, nombre único y caída bajo los controles
+
+- La pila ahora termina por debajo de Pausar y de los textos inferiores. Se reserva una franja inferior dentro del viewport visual y se respeta el área segura. El hero pequeño deja de imponer una altura superior a la disponible.
+- Se elimina el segundo nombre fijo del header móvil. El mismo h1 viaja desde el hero al espacio del navbar; queda fuera del contexto de apilamiento del contenido para que el fondo del header no lo tape al llegar.
+- Se sustituye el trazado de miles de círculos Canvas 2D por puntos WebGL agrupados por tinta, sin bibliotecas nuevas. Se mantiene el muestreo de 480 px y DPR máximo 2. Las figuras quietas conservan todos sus puntos; las transformaciones móviles usan un máximo de 8000 puntos a 24 cuadros/s. Las figuras quietas no mantienen un bucle de dibujo.
+- Durante el scroll móvil se mueve y desvanece la capa compuesta: se cancelan los cálculos y dibujos de partículas desde que se abandona la posición inicial. Se reanuda al volver al hero.
+- Sin WebGL o ante pérdida del contexto gráfico en móvil se muestra un retrato estático. Se respeta reducir movimiento y se liberan buffers/programas al desmontar.
+
+### Medición local antes y después
+
+Chromium en Mac, viewport 393 × 852, DPR de dispositivo 3 (canvas limitado a 2), durante 26 segundos desde una navegación nueva. Se instrumentaron los callbacks de animación que efectivamente dibujan. Son tiempos de JavaScript de esos callbacks, no CPU total de la página ni consumo energético ni temperatura del iPhone.
+
+| Métrica | Antes | Después |
+| --- | ---: | ---: |
+| Tiempo acumulado de callbacks de dibujo | 3494,8 ms | 890,0 ms |
+| Cuadros dibujados | 438 | 226 |
+| Tiempo medio por cuadro | 7,98 ms | 3,94 ms |
+| Percentil 95 | 9,70 ms | 8,00 ms |
+| Llamadas arc del canvas visible | 9.741.306 | 0 |
+
+Reducción observada de aproximadamente 74,5% en el tiempo acumulado de los callbacks de dibujo. El nuevo renderer usa envíos de puntos agrupados; cero llamadas arc no significa cero trabajo gráfico. La temperatura y batería siguen pendientes de validación en el iPhone real.
+
+### Verificaciones
+
+- Reproducción previa: dos nombres visibles; pila por encima del texto inferior.
+- Prueba corregida a 393 × 852: un nombre; pila entre y=797,8 y y=842,7, por debajo del texto (y=777) y dentro del viewport (y=852). El nombre llega a x=20 en el navbar y recibe interacción por encima de su fondo.
+- Cero dibujos nuevos fuera del hero durante 1,8 s. Sin errores de página/consola en ese recorrido.
+- WebGL deshabilitado, pérdida de contexto simulada y reducir movimiento: retrato disponible, cero redibujados durante el intervalo de reposo de 1,6 s y sin errores de página.
+- Build, TypeScript, ESLint y 7 pruebas de seguridad correctos.
+
+Referencia de implementación: [WebGL best practices, MDN](https://developer.mozilla.org/en-US/docs/Web/API/WebGL_API/WebGL_best_practices) (envíos agrupados, buffers reutilizados y eliminación de recursos).
+
+### Comprobación final de tamaños
+
+La altura mínima del hero móvil ahora respeta el espacio disponible. Se verificó la pila pausada mediante las coordenadas reales enviadas al renderizador:
+
+| Viewport | Fin de textos | Inicio de pila | Fin de pila | Resultado |
+| --- | ---: | ---: | ---: | --- |
+| 320 × 568 | 493 | 513.96 | 558.45 | Dentro del viewport, debajo de los textos |
+| 430 × 932 | 847 | 867.72 | 912.78 | Dentro del viewport, debajo de los textos |
+| 768 × 1024 | 948 | 969.87 | 1014.75 | Dentro del viewport, debajo de los textos |
+| 1440 × 900 | 824 | 845.70 | 890.93 | Dentro del viewport, debajo de los textos |
+
+Medición en píxeles CSS con Chromium local. No sustituye la revisión de las barras dinámicas y temperatura en Safari del iPhone. Compilación y lint volvieron a pasar después del ajuste de altura.
