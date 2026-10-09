@@ -12,6 +12,10 @@ export type ParticleMotionFrame = {
   basinOffset: number;
   floor: number;
   loaderSize: number;
+  scrollProgress: number;
+  pointerX: number;
+  pointerY: number;
+  pointerStrength: number;
   baseInk: string;
   veeInk: string;
   accentInk: string;
@@ -32,7 +36,9 @@ export function createParticleMotionRenderer(gl: WebGLRenderingContext, color: (
     attribute vec3 basin;
     attribute vec4 origin;
     attribute vec4 detail;
-    uniform vec2 viewport;
+    attribute vec2 navbar;
+    uniform vec2 viewport, pointer;
+    uniform float scrollProgress, pointerStrength;
     uniform float dpr, phase, introTime, formation, highlights, logoBlend, basinOffset, floorY, loaderSize;
     uniform bool isIntro;
     uniform vec3 baseInk, veeInk, accentInk;
@@ -83,11 +89,27 @@ export function createParticleMotionRenderer(gl: WebGLRenderingContext, color: (
         tint = mix(baseInk, accentInk, sheen);
       }
       if (falling) position.y = min(position.y, floorY - radius - 2.0);
+      // Scroll deforms the current figure into the header, only when scroll changes.
+      position = mix(position, navbar, scrollProgress);
+      position.x += sin(scrollProgress*3.14159265)*detail.x*0.15;
+      if (!isIntro && pointerStrength > 0.0) {
+        vec2 delta = position-pointer;
+        float distance = length(delta);
+        float reach = min(viewport.x*0.18, 85.0);
+        float influence = 1.0-smoothstep(0.0, reach, distance);
+        position += delta/max(distance, 0.01)*influence*32.0*pointerStrength*(1.0-scrollProgress);
+        if (falling || abs(phase-8.0)<0.001 || abs(phase-18.0)<0.001) {
+          position.y = min(position.y, floorY-radius-2.0);
+          position.x = clamp(position.x, 8.0, viewport.x-8.0);
+        }
+      }
+      float clearance = smoothstep(24.0, 152.0, position.y);
+      radius *= (1.0-scrollProgress*0.14)*(1.0-scrollProgress*clearance);
       gl_Position = vec4(position.x/viewport.x*2.0-1.0, 1.0-position.y/viewport.y*2.0, 0.0, 1.0);
       radius *= dpr;
       size = max(2.0, ceil(radius*2.0+2.0));
       gl_PointSize = size;
-      ink = vec4(tint, 1.0);
+      ink = vec4(tint, 1.0-smoothstep(0.8, 1.0, scrollProgress));
     }
   `);
   gl.compileShader(vertex);
@@ -108,7 +130,7 @@ export function createParticleMotionRenderer(gl: WebGLRenderingContext, color: (
   gl.attachShader(program, fragment);
   const attributes = [
     ["portrait", 3], ["night", 3], ["logo", 3],
-    ["basin", 3], ["origin", 4], ["detail", 4],
+    ["basin", 3], ["origin", 4], ["detail", 4], ["navbar", 2],
   ] as const;
   attributes.forEach(([name], index) => gl.bindAttribLocation(program, index, name));
   gl.linkProgram(program);
@@ -119,11 +141,11 @@ export function createParticleMotionRenderer(gl: WebGLRenderingContext, color: (
     return null;
   }
   const buffer = gl.createBuffer()!;
-  const floatsPerParticle = 20;
+  const floatsPerParticle = 22;
   const uniforms = Object.fromEntries([
     "viewport", "dpr", "phase", "introTime", "formation", "highlights",
     "logoBlend", "basinOffset", "floorY", "loaderSize", "isIntro",
-    "baseInk", "veeInk", "accentInk",
+    "baseInk", "veeInk", "accentInk", "scrollProgress", "pointer", "pointerStrength",
   ].map(name => [name, gl.getUniformLocation(program, name)]));
   let count = 0;
   function bind() {
@@ -154,6 +176,9 @@ export function createParticleMotionRenderer(gl: WebGLRenderingContext, color: (
       gl.uniform1f(uniforms.basinOffset, f.basinOffset);
       gl.uniform1f(uniforms.floorY, f.floor);
       gl.uniform1f(uniforms.loaderSize, f.loaderSize);
+      gl.uniform1f(uniforms.scrollProgress, f.scrollProgress);
+      gl.uniform2f(uniforms.pointer, f.pointerX, f.pointerY);
+      gl.uniform1f(uniforms.pointerStrength, f.pointerStrength);
       gl.uniform1i(uniforms.isIntro, f.intro ? 1 : 0);
       for (const name of ["baseInk", "veeInk", "accentInk"] as const) {
         const rgb = color(f[name]);

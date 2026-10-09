@@ -111,7 +111,7 @@ export function createParticleRenderer(canvas: HTMLCanvasElement, forceStatic = 
       if (!count) return;
       gl.useProgram(program); gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
       gl.enableVertexAttribArray(0); gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 0, 0);
-      for (let i = 1; i < 6; i++) gl.disableVertexAttribArray(i);
+      for (let i = 1; i < 7; i++) gl.disableVertexAttribArray(i);
       if (points.byteLength > capacity) {
         capacity = points.byteLength; gl.bufferData(gl.ARRAY_BUFFER, capacity, gl.DYNAMIC_DRAW);
       }

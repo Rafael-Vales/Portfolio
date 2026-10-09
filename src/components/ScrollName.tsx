@@ -21,14 +21,9 @@ export default function ScrollName() {
       lastProgress = p;
       const scale = 1 + (endScale - 1) * p;
       name!.style.transform = `translate3d(${startX + (endX - startX) * p}px, ${startY + (endY - startY) * p}px, 0) scale(${scale})`;
-      const docked = String(raw >= .99);
-      if (name!.dataset.docked !== docked) {
-        // Match the navbar typography once on arrival, without relayout on
-        // every scrolling frame. The journey itself only changes transform.
-        name!.style.letterSpacing = docked === "true" ? "-.025em" : "-.07em";
-        name!.style.fontWeight = docked === "true" ? "550" : "500";
-        name!.dataset.docked = docked;
-      }
+      // Typography stays identical throughout the trip: switching tracking or
+      // weight at arrival changes the text width and causes a visible snap.
+      name!.dataset.docked = String(raw >= 1);
     }
     function measure() {
       if (compact && measuredWidth === document.documentElement.clientWidth) return;
@@ -38,14 +33,10 @@ export default function ScrollName() {
       const box = hero!.getBoundingClientRect();
       const slot = target!.getBoundingClientRect();
       heroTop = box.top + window.scrollY;
-      name!.style.letterSpacing = "-.07em";
-      name!.style.fontWeight = "500";
-      const font = parseFloat(getComputedStyle(name!).fontSize);
       startX = box.left + (box.width - name!.offsetWidth) / 2;
       startY = heroTop + (box.height - name!.offsetHeight) / 2 + Math.min(44, box.height * .05);
       endX = slot.left;
-      const targetSize = parseFloat(getComputedStyle(target!).fontSize);
-      endScale = targetSize / font;
+      endScale = slot.width / name!.offsetWidth;
       endY = slot.top + (slot.height - name!.offsetHeight * endScale) / 2;
       range = box.height * .7;
       paint();

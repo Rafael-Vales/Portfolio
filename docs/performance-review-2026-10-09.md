@@ -143,3 +143,38 @@ Se verificaron apertura, retrato, caída, pausa/reanudación, monograma, modo no
 ### Validación física pendiente
 
 WebKit en Mac verifica compatibilidad del motor, no temperatura ni FPS en un iPhone 16 Pro. Comparar en Safari real el ciclo completo durante 3–5 minutos, scroll de ida/vuelta, cambio de tema y pausa. El resultado térmico no puede darse por resuelto a partir de estas pruebas locales.
+
+
+## Scroll hacia el header e interacción táctil
+
+### Fallos reproducidos
+
+- En móvil, el toque no desplazaba ninguna partícula y el scroll solo trasladaba una imagen congelada mediante CSS.
+- El nombre cambiaba de peso y espaciado al llegar al header. En Chromium, el ancho saltaba 10,26 px en el último tramo.
+
+### Correcciones
+
+- El mismo nombre conserva su tipografía durante todo el recorrido. Se escala hasta el ancho real del espacio del header, incluido el punto final; no aparece un segundo nombre visible.
+- En móvil con WebGL, el shader recoge los puntos de la figura actual hacia sus destinos del header. Cada cambio de scroll solicita un dibujo; al detenerse no queda una simulación activa y al llegar al header se limpia el canvas.
+- El toque desplaza suavemente los puntos cercanos y al soltar o cancelar vuelven a su lugar. Se usan eventos de puntero pasivos, sin capturar el gesto ni impedir el scroll o zoom nativos. No se actualizan miles de posiciones desde JavaScript.
+- Se conserva el límite de cadencia, DPR 2, el retrato estático sin WebGL y el respeto por movimiento reducido.
+
+### Evidencia de la revisión
+
+Producción local, Mac, viewport 393 × 852. La prueba `scripts/verify-hero-input.browser.mjs` mide los píxeles dibujados, la recogida al scrollear, el reposo y los últimos pasos del nombre. Las lecturas de GPU solo existen en el test. La preparación del test desactiva el desplazamiento suave y espera la navegación inicial por ancla para comparar posiciones exactas; el producto mantiene el scroll nativo.
+
+| Medición | Chromium | WebKit |
+| --- | ---: | ---: |
+| Píxeles de alfa desplazados al tocar | 26460 | 25847 |
+| Diferencia tras cancelar el toque y estabilizar | 0 | 0 |
+| Dibujos nuevos durante reposo con pausa | 0 | 0 |
+| Dibujos nuevos con scroll detenido | 0 | 0 |
+| Mayor diferencia de ancho en los últimos pasos del nombre | 0,061 px | 0,081 px |
+| Posición horizontal del nombre en el header | 20 px | 20 px |
+| Excepciones de página / errores WebGL | 0 | 0 |
+
+Un gesto táctil nativo mediante Chromium desplazó la página 384 px, emitió `pointercancel` y no dejó dibujos activos después de estabilizarse. La prueba del ciclo mantuvo 27107 puntos en todas las fases, sin cambios de densidad, intervalo mediano de 16,7 ms y percentil 95 de 24,7 ms en esta ejecución local. Estos intervalos no son una medida de FPS ni consumo del iPhone.
+
+Sin WebGL, con pérdida de contexto y con movimiento reducido: retrato disponible, cero dibujos nuevos durante el reposo y ninguna excepción. Build y lint correctos; siete pruebas de seguridad correctas.
+
+Referencias: [MDN: touch-action](https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/touch-action) y [MDN: pointercancel](https://developer.mozilla.org/en-US/docs/Web/API/Element/pointercancel_event), para conservar el gesto nativo y terminar la reacción táctil cuando el navegador toma el control del desplazamiento.
