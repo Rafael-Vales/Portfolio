@@ -41,3 +41,7 @@ Las dos imágenes de partículas pesan 88,6% menos. Una medición adicional de s
 En Safari del iPhone 16 Pro: recorrer la página 3–5 minutos, dejarla quieta en Contacto, volver a la portada, cambiar tema/idioma y reproducir las demos. Comparar con la versión anterior desde condiciones similares y sin otra grabación de pantalla en curso. La emulación no mide temperatura ni batería y no sustituye esa comprobación. Los cambios permanecen locales; esta revisión no publica un despliegue.
 
 Referencias: [optimización de canvas](https://developer.mozilla.org/en-US/docs/Web/API/Canvas_API/Tutorial/Optimizing_canvas) y [viewport visual](https://developer.mozilla.org/en-US/docs/Web/API/VisualViewport).
+
+## Ajuste de definición después de la prueba
+
+La primera reducción a 240 px de muestreo en celular y 360 px en escritorio hacía que los puntos fueran más grandes y se perdieran rasgos. Se aumenta a 360 px en celular y se recuperan los 480 px en escritorio. El canvas vuelve a un límite de DPR 2 en ambos; antes se limitaba a 1,5 en celular. Se mantienen el máximo de 30 redibujados por segundo en celular, las pausas entre figuras, la detención fuera de la portada y los recursos comprimidos. Las cifras de redibujados de la tabla siguen describiendo la inactividad fuera de pantalla; el conteo de operaciones durante la transformación de seis segundos corresponde a la primera versión y no a este ajuste de densidad.

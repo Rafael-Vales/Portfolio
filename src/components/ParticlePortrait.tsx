@@ -39,6 +39,10 @@ export default function ParticlePortrait() {
     let builtWidth = 0, builtHeight = 0, lastPaint = 0;
     const compact = window.matchMedia("(max-width: 700px), (pointer: coarse)").matches;
     const frameInterval = 1000 / (compact ? 30 : 60);
+    // Keep fine facial detail on Retina screens; save work by sleeping offscreen
+    // and between transformations rather than enlarging a sparse set of dots.
+    const canvasDpr = Math.min(window.devicePixelRatio || 1, 2);
+    const portraitSampleWidth = compact ? 360 : 480;
     let baseInk = "#151515", accentInk = "#6b8876", projectInk = "", highlightPortrait = false;
     function readPalette() {
       const style = getComputedStyle(document.body);
@@ -147,7 +151,7 @@ export default function ParticlePortrait() {
     }
     function sizeCanvas() {
       width = document.documentElement.clientWidth; height = compact ? hero.offsetHeight + 72 : window.innerHeight;
-      const dpr = Math.min(window.devicePixelRatio || 1, compact ? 1.5 : 2);
+      const dpr = canvasDpr;
       canvas!.width = Math.round(width * dpr); canvas!.height = Math.round(height * dpr);
       ctx!.setTransform(dpr, 0, 0, dpr, 0, 0);
       canvas!.style.height = `${height}px`;
@@ -318,12 +322,12 @@ export default function ParticlePortrait() {
       range = heroRect.height * .7;
       width = document.documentElement.clientWidth; height = compact ? hero.offsetHeight + 72 : window.innerHeight;
       if (!width || !height) return;
-      const dpr = Math.min(window.devicePixelRatio || 1, compact ? 1.5 : 2);
+      const dpr = canvasDpr;
       canvas!.width = Math.round(width * dpr); canvas!.height = Math.round(height * dpr);
       ctx!.setTransform(dpr, 0, 0, dpr, 0, 0);
       canvas!.style.height = `${height}px`;
       const sample = document.createElement("canvas");
-      sample.width = compact ? 240 : 360; sample.height = Math.round(sample.width * source.height / source.width);
+      sample.width = portraitSampleWidth; sample.height = Math.round(sample.width * source.height / source.width);
       const sc = sample.getContext("2d", { willReadFrequently: true });
       if (!sc) return;
       sc.drawImage(source, 0, 0, sample.width, sample.height);
