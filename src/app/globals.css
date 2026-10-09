@@ -369,7 +369,7 @@ main.container, .footer { position: relative; z-index: 1; }
 .animal-project-cta { display: inline-flex; align-items: center; gap: 28px; background: #f32947; color: #fff; border: 0; border-radius: 30px; padding: 15px 24px; min-height: 48px; font: inherit; font-size: 14px; text-decoration: none; cursor: pointer; transition: background 200ms, transform 200ms; }
 .animal-project-cta:hover { background: #da2340; transform: translateY(-2px); }
 .animal-project-note { display: block; margin-top: 14px; font-size: 10px; opacity: .65; }
-.animal-try-mobile { display: none; }
+.animal-try-mobile, .animal-description-mobile { display: none; }
 .animal-store-preview { align-self: center; min-width: 0; border-radius: 13px; overflow: hidden; background: #fff; color: #0b1d4c; box-shadow: 0 28px 50px -24px #030c2970; transform: perspective(1200px) rotateY(-6deg) rotateZ(2deg); }
 .animal-store-preview img { display: block; width: 100%; height: auto; }
 .animal-preview-bar { display: flex; align-items: center; gap: 5px; padding: 12px; background: #f0f2f7; }
@@ -806,8 +806,8 @@ main.container, .footer { position: relative; z-index: 1; }
 .mobile-menu-toggle, .mobile-navigation, .gallery-arrow, .gallery-progress { display: none; }
 .project-gallery-carousel { flex: 1; min-width: 0; display: flex; }
 
-@media (max-width: 700px) {
-  html { scroll-padding-top: 88px; }
+@media (max-width: 700px), (max-width: 1000px) and (max-height: 600px) and (pointer: coarse) {
+  html { scroll-padding-top: 88px; scroll-snap-type: none; }
   .container { width: calc(100% - 40px); }
   main > section { min-width: 0; }
   .header { z-index: 40; background: var(--background); border-bottom: 1px solid var(--line); }
@@ -862,55 +862,65 @@ main.container, .footer { position: relative; z-index: 1; }
   .gallery-progress { display: flex; justify-content: center; align-items: center; gap: 14px; min-height: 44px; font-size: 11px; color: var(--muted); }
   .gallery-progress > span:first-child { font-variant-numeric: tabular-nums; color: var(--foreground); }
 
-  .project-expanded-stage { grid-template-columns: 1fr 1fr; gap: 16px; align-items: start; }
+  /* A selected project is a viewport-sized reader; the gallery keeps its carousel. */
+  .project-browser[data-selected="true"] { flex: none; height: calc(100svh - 73px); min-height: 0; }
+  .project-browser[data-selected="true"] .project-browser-toolbar { flex: 0 0 48px; min-height: 48px; }
+  .project-browser[data-selected="true"] .project-view { display: flex; min-height: 0; padding-block: 8px max(16px, env(safe-area-inset-bottom)); }
+  .project-expanded { min-height: 0; }
+  .project-expanded-stage { grid-template-columns: 1fr 1fr; grid-template-rows: 44px minmax(0, 1fr); gap: 12px; align-items: stretch; min-height: 0; }
   .project-expanded-stage > .project-arrow { grid-row: 1; justify-self: start; width: 52px; height: 44px; border: 1px solid var(--line); border-radius: 999px; color: var(--foreground); }
   .project-expanded-stage > .project-arrow:last-child { grid-column: 2; justify-self: end; }
   .project-arrow svg { width: 10px; height: 22px; }
-  .project-expanded-cover, .project-expanded-cover--trip, .project-expanded-cover--shop, .project-expanded-cover--clinic { grid-column: 1 / -1; grid-row: 2; height: auto; min-height: 0; margin-bottom: 28px; border-radius: 22px; align-items: start; }
-  .project-front, .project-back { grid-area: 1 / 1; min-width: 0; }
-  .project-front { position: relative; inset: auto; height: auto; padding-bottom: 36px; }
-  .project-back { overflow: hidden; }
-  .project-expanded-cover[data-flipped="true"] .project-front { position: absolute; inset: 0; height: 100%; overflow: hidden; }
-  .project-expanded-cover[data-flipped="true"] .project-back { position: relative; inset: auto; height: auto; }
-  .project-expanded-cover .project-flip-trigger { position: relative; inset: auto; display: flex; width: fit-content; max-width: calc(100% - 44px); justify-content: center; margin: 24px auto 12px; padding: 12px 18px; min-height: 48px; font-size: 12px; gap: 16px; }
-  .trip-project-content { height: auto; min-width: 0; padding: 28px 22px 8px; gap: 24px; }
-  .trip-project-content.trip-showcase { grid-template-columns: minmax(0, 1fr); text-align: left; }
+  .project-expanded-cover, .project-expanded-cover--trip, .project-expanded-cover--shop, .project-expanded-cover--clinic { grid-column: 1 / -1; grid-row: 2; height: 100%; min-height: 0; margin: 0; border-radius: 22px; align-items: stretch; }
+  .project-front, .project-back,
+  .project-expanded-cover[data-flipped="true"] .project-front,
+  .project-expanded-cover[data-flipped="true"] .project-back { position: absolute; inset: 0; display: flex; flex-direction: column; min-width: 0; height: 100%; padding: 0; overflow: hidden; }
+  .project-expanded-cover .project-flip-trigger { position: relative; inset: auto; flex: 0 0 auto; display: flex; width: fit-content; max-width: calc(100% - 44px); justify-content: center; margin: 8px 18px 14px auto; padding: 10px 16px; min-height: 44px; font-size: 12px; gap: 12px; }
+  .trip-project-content { flex: 1; height: auto; min-height: 0; min-width: 0; padding: 20px 20px 8px; gap: 16px; overflow: auto; overscroll-behavior-y: contain; scrollbar-width: thin; }
+  .trip-project-content.trip-showcase { grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); grid-template-rows: auto minmax(min-content, 1fr) auto auto; text-align: left; }
   .trip-showcase > .trip-project-copy { display: contents; }
-  .trip-showcase .trip-project-identity { grid-row: 1; margin-bottom: 0; gap: 8px; font-size: 11px; }
+  .trip-showcase .trip-project-identity { grid-column: 1 / -1; grid-row: 1; min-height: 40px; margin: 0; padding-right: 52px; gap: 6px; font-size: 11px; }
   .trip-project-identity .trip-release-status { white-space: normal; font-size: 9px; }
-  .trip-showcase-story { grid-row: 2; min-height: 190px; }
+  .trip-showcase-story { grid-column: 1; grid-row: 2; min-height: 0; align-self: center; }
   .trip-showcase-label { margin-bottom: 10px; font-size: 11px; }
-  .project-expanded-cover .trip-showcase-story h3 { padding: 0; font-size: clamp(30px, 8.2vw, 38px); max-width: none; text-wrap: balance; }
-  .trip-showcase-story p { margin: 14px 0 0; font-size: 14px; line-height: 1.65; }
-  .trip-showcase-phone { grid-row: 3; width: min(225px, calc(100% - 10px)); transform: none; border-radius: 28px; }
-  .trip-showcase-controls { grid-row: 4; justify-content: center; gap: 6px 14px; margin: 0; }
-  .trip-showcase-dots { gap: 0; }
-  .trip-showcase-dots button { width: 30px; min-height: 44px; }
-  .trip-showcase-pause { min-height: 44px; }
-  .trip-showcase .trip-project-role { grid-row: 5; margin: 0; text-align: center; font-size: 10px; line-height: 1.6; }
-  .trip-project-emblem { width: auto; }
-  .trip-project-emblem .trip-card-logo { width: 72px; }
-  .animal-project-emblem .animal-logo { width: 94px; }
-  .animal-project-content { display: flex; flex-direction: column; gap: 28px; text-align: left; }
-  .project-expanded-cover .animal-project-copy h3 { padding: 0; font-size: clamp(30px, 8.2vw, 38px); }
-  .animal-project-copy p { margin-block: 18px; font-size: 14px; line-height: 1.65; }
-  .animal-project-features { gap: 7px; font-size: 10px; }
-  .animal-project-cta { min-height: 48px; font-size: 13px; }
-  .animal-store-preview { width: 100%; min-width: 0; transform: none; border-radius: 10px; }
-  .animal-preview-caption { font-size: 10px; line-height: 1.5; }
-  .clinic-project-content, .project-expanded-cover--clinic .clinic-project-content { height: auto; width: 100%; padding: 30px 22px 8px; text-align: left; }
-  .project-expanded-cover .clinic-project-content h3 { padding: 18px 0; font-size: clamp(32px, 8.7vw, 40px); }
-  .clinic-project-content p { font-size: 14px; }
-  .clinic-project-scope { justify-content: start; }
+  .project-expanded-cover .trip-showcase-story h3 { padding: 0; font-size: clamp(24px, 6.4vw, 32px); max-width: none; text-wrap: balance; }
+  .trip-showcase-story p { margin: 14px 0 0; font-size: 14px; line-height: 1.5; }
+  .trip-showcase-phone { grid-column: 2; grid-row: 2; align-self: center; width: min(calc(100% - 8px), 140px, 17svh); border-width: 4px; transform: none; border-radius: 16px; }
+  .trip-showcase-controls { grid-column: 1 / -1; grid-row: 3; justify-content: center; gap: 0 8px; margin: 0; }
+  .trip-showcase-dots { flex: 1; flex-wrap: nowrap; justify-content: space-between; gap: 0; }
+  .trip-showcase-dots button { flex: 1; width: auto; min-width: 20px; min-height: 44px; }
+  .trip-showcase-pause { min-height: 44px; padding-inline: 0; font-size: 10px; }
+  .trip-showcase-count { font-size: 9px; }
+  .trip-showcase .trip-project-role { grid-column: 1 / -1; grid-row: 4; margin: 0; text-align: left; font-size: 10px; line-height: 1.5; }
+  .trip-project-emblem { top: 16px; right: 16px; bottom: auto; left: auto; width: auto; transform: none; }
+  .trip-project-emblem .trip-card-logo { width: 44px; }
+  .animal-project-emblem .animal-logo { width: 52px; }
+  .animal-project-content { display: flex; flex-direction: column; gap: 16px; text-align: left; }
+  .animal-project-copy .trip-project-eyebrow { min-height: 36px; padding-right: 58px; margin-bottom: 10px; display: flex; align-items: center; font-size: 11px; }
+  .project-expanded-cover .animal-project-copy h3 { padding: 0; font-size: clamp(26px, 7vw, 34px); }
+  .animal-project-copy p { margin-block: 14px; font-size: 14px; line-height: 1.5; }
+  .animal-try-desktop, .animal-description-desktop { display: none; }
+  .animal-try-mobile { display: inline-flex; }
+  .animal-description-mobile { display: block; }
+  .animal-project-features { display: none; }
+  .animal-project-features li { padding: 6px 8px; }
+  .animal-project-cta { min-height: 44px; font-size: 13px; padding: 10px 18px; }
+  .animal-project-note { margin-top: 10px; line-height: 1.5; }
+  .animal-store-preview { flex-shrink: 0; width: min(100%, 280px); min-width: 0; transform: none; border-radius: 10px; align-self: center; margin-block: auto; }
+  .animal-preview-bar, .animal-preview-caption { display: none; }
+  .clinic-project-content, .project-expanded-cover--clinic .clinic-project-content { flex: 1; min-height: 0; height: auto; width: 100%; padding: 22px 20px 8px; text-align: left; overflow: auto; overscroll-behavior-y: contain; scrollbar-width: thin; }
+  .project-expanded-cover .clinic-project-content h3 { padding: 16px 0; font-size: clamp(30px, 8vw, 38px); }
+  .clinic-project-content p { font-size: 14px; line-height: 1.5; }
+  .clinic-project-scope { justify-content: start; gap: 6px; margin-top: 14px; }
+  .clinic-project-scope li { padding: 7px 10px; }
   .clinic-project-note { font-size: 12px; line-height: 1.5; }
-  .clinic-project-stage { font-size: 11px; line-height: 1.6; }
-  .project-back-content { padding: 28px 22px 0; height: auto; overflow: visible; }
+  .clinic-project-stage { font-size: 11px; line-height: 1.5; }
+  .project-back-content { flex: 1; min-height: 0; padding: 24px 20px 12px; height: auto; overflow: auto; overscroll-behavior-y: contain; scrollbar-width: thin; }
   .project-expanded-cover .project-back h3 { margin-block: 16px; font-size: 30px; padding: 0; }
   .case-intro { font-size: 14px; }
   .case-columns { grid-template-columns: minmax(0, 1fr); gap: 22px; }
   .case-columns h4 { font-size: 13px; }
   .case-columns p { font-size: 13px; }
-  .project-back > .project-flip-trigger { margin-bottom: 28px; }
 
   .product-decisions { grid-template-columns: minmax(0, 1fr); gap: 30px; padding-block: 48px; }
   .decisions-heading h2 { font-size: 42px; margin-block: 20px; max-width: 320px; }

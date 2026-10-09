@@ -12,6 +12,7 @@ import { type CSSProperties, useCallback, useEffect, useLayoutEffect, useRef, us
 
 
 
+const mobileProjectQuery = "(max-width: 700px), (max-width: 1000px) and (max-height: 600px) and (pointer: coarse)";
 const slugs = ["trippilot", "animal-feed", "consultorio"];
 export default function ProjectGallery({ initialProject }: { initialProject?: string }) {
  const {t,locale}=useLocale();
@@ -27,13 +28,36 @@ const projects = [
   const [colored, setColored] = useState(initial >= 0);
   const [galleryIndex, setGalleryIndex] = useState(initial < 0 ? 0 : initial);
   const gallery = useRef<HTMLDivElement>(null);
+  const browser = useRef<HTMLDivElement>(null);
+  const alignMobileProject = useCallback(() => {
+    if (!matchMedia(mobileProjectQuery).matches || !browser.current) return;
+    const headerBottom = document.querySelector(".header")?.getBoundingClientRect().bottom ?? 72;
+    const top = window.scrollY + browser.current.getBoundingClientRect().top - headerBottom;
+    if (Math.abs(top - window.scrollY) > 1) window.scrollTo({top, behavior:"instant"});
+  }, []);
+  useEffect(() => {
+    if (selected === null) return;
+    // Also align deep links after the browser has completed its native hash jump.
+    let frame = requestAnimationFrame(alignMobileProject);
+    let width = window.innerWidth;
+    const resize = () => {
+      // Address-bar height changes must not pull the reader back while scrolling.
+      if (window.innerWidth === width) return;
+      width = window.innerWidth;
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(alignMobileProject);
+    };
+    window.addEventListener("load", alignMobileProject, {once:true});
+    window.addEventListener("resize", resize, {passive:true});
+    return () => { cancelAnimationFrame(frame); window.removeEventListener("load", alignMobileProject); window.removeEventListener("resize", resize); };
+  }, [selected, alignMobileProject]);
   const galleryIndexRef = useRef(galleryIndex);
   const galleryTarget = useRef<number | null>(null);
   const galleryFrame = useRef(0);
   function centerCard(index: number, smooth = true) {
     const rail = gallery.current;
     const card = rail?.children[index] as HTMLElement | undefined;
-    if (!rail || !card || !matchMedia("(max-width: 700px)").matches) return;
+    if (!rail || !card || !matchMedia(mobileProjectQuery).matches) return;
     const left = card.offsetLeft - rail.offsetLeft - (rail.clientWidth - card.offsetWidth) / 2;
     rail.scrollTo({left, behavior: smooth && !matchMedia("(prefers-reduced-motion: reduce)").matches ? "smooth" : "instant"});
   }
@@ -49,7 +73,7 @@ const projects = [
     cancelAnimationFrame(galleryFrame.current);
     galleryFrame.current = requestAnimationFrame(() => {
       const rail = gallery.current;
-      if (!rail || !matchMedia("(max-width: 700px)").matches) return;
+      if (!rail || !matchMedia(mobileProjectQuery).matches) return;
       const center = rail.scrollLeft + rail.clientWidth / 2;
       let closest = 0, distance = Infinity;
       Array.from(rail.children).forEach((child, index) => {
@@ -86,7 +110,6 @@ const projects = [
   useLayoutEffect(() => {
     if (flipChanged.current) {
       (flipped ? flipReturn : flipOpen).current?.focus({preventScroll:true});
-      if (matchMedia("(max-width: 700px)").matches) document.querySelector(".project-browser")?.scrollIntoView({block:"start",behavior:"instant"});
       flipChanged.current=false;
     }
   },[flipped]);
@@ -119,8 +142,8 @@ const projects = [
 		if (selected === null)
 			triggers.current[origin.current]?.focus({ preventScroll: true });
 		else back.current?.focus({ preventScroll: true });
-        if (matchMedia("(max-width: 700px)").matches) document.querySelector(".project-browser")?.scrollIntoView({block:"start",behavior:"instant"});
-	}, [selected]);
+        alignMobileProject();
+	}, [selected, alignMobileProject]);
 	const [paint, setPaint] = useState<{
 		color: string;
 		stage: "card" | "spread";
@@ -147,6 +170,7 @@ const projects = [
       transitionId.current++; transitioning.current=false;
       if(timer.current){clearTimeout(timer.current);timer.current=null;}
       const next=slugs.indexOf(new URL(window.location.href).searchParams.get("project") ?? "");
+      restoreFocus.current=true;
       setSelected(next<0?null:next);setColored(next>=0);setPaint(null);setLeaving(false);setTryingStore(false);setFlipped(false);
     }
     window.addEventListener("popstate",restore);
@@ -217,6 +241,8 @@ const projects = [
 	return (
 		<div
 			className="project-browser"
+            ref={browser}
+            data-selected={selected !== null}
 			data-leaving={leaving}
             data-store-open={tryingStore}
 			data-waiting={selected !== null && !colored && !paint}
@@ -262,7 +288,7 @@ const projects = [
 					<div className="project-gallery-carousel" role="region" aria-label={t("Galería de proyectos", "Project gallery")}>
                       <button type="button" className="gallery-arrow gallery-arrow--previous" onClick={() => moveGallery(-1)} aria-label={t("Tarjeta anterior", "Previous card")}>←</button>
                       <div ref={gallery} className="project-gallery" onPointerDown={() => { galleryTarget.current = null; }} onScroll={syncGallery} onKeyDown={event => {
-                        if (!matchMedia("(max-width: 700px)").matches) return;
+                        if (!matchMedia(mobileProjectQuery).matches) return;
                         if (event.key === "ArrowLeft" || event.key === "ArrowRight") {
                           event.preventDefault();
                           const next = moveGallery(event.key === "ArrowLeft" ? -1 : 1);

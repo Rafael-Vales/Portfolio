@@ -36,7 +36,8 @@ export default function AnimalFeedShowcase({ trying, onTry, onReturn }: { trying
     <div className="trip-project-copy animal-project-copy">
       <span className="trip-project-eyebrow">Animal Feed · Los Abuelos</span>
       <h3>{t("Todo para tu mascota.")}<br />{t("En un solo lugar.")}</h3>
-      <p>{t("Una tienda online de alimentos y accesorios para mascotas. Explorá el catálogo, filtrá por marca y elegí la presentación que necesitás antes de sumarla al carrito.")}</p>
+      <p className="animal-description-desktop">{t("Una tienda online de alimentos y accesorios para mascotas. Explorá el catálogo, filtrá por marca y elegí la presentación que necesitás antes de sumarla al carrito.")}</p>
+      <p className="animal-description-mobile">{t("Ecommerce de alimentos y accesorios para mascotas, con búsqueda, filtros, favoritos y carrito.", "Pet food and accessories ecommerce, with search, filters, favorites and a shopping cart.")}</p>
       <ul className="animal-project-features"><li>{t("Catálogo y búsqueda")}</li><li>{t("Filtros y favoritos")}</li><li>{t("Carrito de compra")}</li></ul>
       <button ref={tryButton} className="animal-project-cta animal-try-desktop" onClick={() => { setLoaded(false); onTry(); }}>{t("Probar tienda")}<span aria-hidden="true">↗</span></button>
       <a className="animal-project-cta animal-try-mobile" href={STORE_URL} target="_blank" rel="noopener noreferrer">{t("Probar tienda")}<span aria-hidden="true">↗</span></a>
