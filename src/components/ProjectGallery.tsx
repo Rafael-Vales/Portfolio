@@ -25,6 +25,50 @@ const projects = [
   const initial = slugs.indexOf(initialProject ?? "");
   const [selected, setSelected] = useState<number | null>(initial < 0 ? null : initial);
   const [colored, setColored] = useState(initial >= 0);
+  const [galleryIndex, setGalleryIndex] = useState(initial < 0 ? 0 : initial);
+  const gallery = useRef<HTMLDivElement>(null);
+  const galleryIndexRef = useRef(galleryIndex);
+  const galleryTarget = useRef<number | null>(null);
+  const galleryFrame = useRef(0);
+  function centerCard(index: number, smooth = true) {
+    const rail = gallery.current;
+    const card = rail?.children[index] as HTMLElement | undefined;
+    if (!rail || !card || !matchMedia("(max-width: 700px)").matches) return;
+    const left = card.offsetLeft - rail.offsetLeft - (rail.clientWidth - card.offsetWidth) / 2;
+    rail.scrollTo({left, behavior: smooth && !matchMedia("(prefers-reduced-motion: reduce)").matches ? "smooth" : "instant"});
+  }
+  function moveGallery(direction: number) {
+    const next = ((galleryTarget.current ?? galleryIndexRef.current) + direction + slugs.length) % slugs.length;
+    galleryTarget.current = next;
+    galleryIndexRef.current = next;
+    setGalleryIndex(next);
+    centerCard(next);
+    return next;
+  }
+  function syncGallery() {
+    cancelAnimationFrame(galleryFrame.current);
+    galleryFrame.current = requestAnimationFrame(() => {
+      const rail = gallery.current;
+      if (!rail || !matchMedia("(max-width: 700px)").matches) return;
+      const center = rail.scrollLeft + rail.clientWidth / 2;
+      let closest = 0, distance = Infinity;
+      Array.from(rail.children).forEach((child, index) => {
+        const card = child as HTMLElement;
+        const gap = Math.abs(card.offsetLeft - rail.offsetLeft + card.offsetWidth / 2 - center);
+        if (gap < distance) { distance = gap; closest = index; }
+      });
+      if (distance < 2) galleryTarget.current = null;
+      galleryIndexRef.current = closest;
+      setGalleryIndex(closest);
+    });
+  }
+  useLayoutEffect(() => {
+    if (selected !== null) return;
+    const frame = requestAnimationFrame(() => centerCard(galleryIndexRef.current, false));
+    const resize = () => centerCard(galleryIndexRef.current, false);
+    window.addEventListener("resize", resize);
+    return () => { cancelAnimationFrame(frame); cancelAnimationFrame(galleryFrame.current); window.removeEventListener("resize", resize); };
+  }, [selected]);
   const [flipped, setFlipped] = useState(false);
   const flipReturn = useRef<HTMLButtonElement>(null);
   const flipOpen = useRef<HTMLButtonElement>(null);
@@ -40,7 +84,11 @@ const projects = [
   const shareTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => () => { if (shareTimer.current) clearTimeout(shareTimer.current); }, []);
   useLayoutEffect(() => {
-    if (flipChanged.current) { (flipped ? flipReturn : flipOpen).current?.focus({preventScroll:true}); flipChanged.current=false; }
+    if (flipChanged.current) {
+      (flipped ? flipReturn : flipOpen).current?.focus({preventScroll:true});
+      if (matchMedia("(max-width: 700px)").matches) document.querySelector(".project-browser")?.scrollIntoView({block:"start",behavior:"instant"});
+      flipChanged.current=false;
+    }
   },[flipped]);
   function flip(value:boolean) { flipChanged.current=true;setFlipped(value); }
   async function share() {
@@ -71,6 +119,7 @@ const projects = [
 		if (selected === null)
 			triggers.current[origin.current]?.focus({ preventScroll: true });
 		else back.current?.focus({ preventScroll: true });
+        if (matchMedia("(max-width: 700px)").matches) document.querySelector(".project-browser")?.scrollIntoView({block:"start",behavior:"instant"});
 	}, [selected]);
 	const [paint, setPaint] = useState<{
 		color: string;
@@ -151,6 +200,7 @@ const projects = [
 
 	function open(index: number) {
 		origin.current = index;
+        galleryIndexRef.current = index; setGalleryIndex(index);
 		transition(index);
 	}
 	function close() {
@@ -209,11 +259,21 @@ const projects = [
 			</div>
 			<div className="project-view" key={selected ?? "gallery"}>
 				{selected === null ? (
-					<div className="project-gallery">
+					<div className="project-gallery-carousel" role="region" aria-label={t("Galería de proyectos", "Project gallery")}>
+                      <button type="button" className="gallery-arrow gallery-arrow--previous" onClick={() => moveGallery(-1)} aria-label={t("Tarjeta anterior", "Previous card")}>←</button>
+                      <div ref={gallery} className="project-gallery" onPointerDown={() => { galleryTarget.current = null; }} onScroll={syncGallery} onKeyDown={event => {
+                        if (!matchMedia("(max-width: 700px)").matches) return;
+                        if (event.key === "ArrowLeft" || event.key === "ArrowRight") {
+                          event.preventDefault();
+                          const next = moveGallery(event.key === "ArrowLeft" ? -1 : 1);
+                          triggers.current[next]?.focus({preventScroll:true});
+                        }
+                      }}>
 						{projects.map((project, index) => (
 							<article
 								key={project.style}
-								className={`project-name-card project-name-card--${project.style}`}>
+								className={`project-name-card project-name-card--${project.style}`}
+                                data-active={galleryIndex === index}>
 								{index === 0 && (
 									<>
 										<span className="trip-card-category">{t("App iOS")}</span>
@@ -247,7 +307,10 @@ const projects = [
                                 </div>}
 							</article>
 						))}
-					</div>
+                      </div>
+                      <button type="button" className="gallery-arrow gallery-arrow--next" onClick={() => moveGallery(1)} aria-label={t("Tarjeta siguiente", "Next card")}>→</button>
+                      <div className="gallery-progress" aria-live="polite" aria-atomic="true"><span>{String(galleryIndex + 1).padStart(2, "0")} / 03</span><span>{projects[galleryIndex].name}</span></div>
+                    </div>
 				) : (
 					<section
 						className="project-expanded"

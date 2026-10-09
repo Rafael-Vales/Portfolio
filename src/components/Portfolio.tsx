@@ -1,6 +1,6 @@
 "use client";
-import { LanguageSwitcher, useLocale } from "./LocaleProvider";
-import ThemeToggle from "./ThemeToggle";
+import { useLocale } from "./LocaleProvider";
+import PortfolioHeader from "./PortfolioHeader";
 import ProductDecisions from "./ProductDecisions";
 import AboutSection from "@/components/AboutSection";
 import CareerJourney from "@/components/CareerJourney";
@@ -13,10 +13,7 @@ export default function Portfolio({ initialProject }: { initialProject?: string 
   const { t } = useLocale();
   return <>
     <a className="skip-link" href="#contenido">{t("Saltar al contenido")}</a>
-    <header className="header"><div className="container header-inner">
-      <span className="wordmark wordmark-slot" aria-hidden="true">Rafael Vales</span>
-      <nav aria-label={t("Navegación principal")}><a href="#proyectos">{t("Proyectos")}</a><a href="#sobre-mi">{t("Sobre mí")}</a><a href="#contacto">{t("Contacto")}</a></nav><LanguageSwitcher /><ThemeToggle />
-    </div></header>
+    <PortfolioHeader />
     <main id="contenido" className="container">
       <section className="hero" aria-labelledby="presentacion">
         <ScrollName />

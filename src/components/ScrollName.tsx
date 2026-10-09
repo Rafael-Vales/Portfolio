@@ -20,6 +20,7 @@ export default function ScrollName() {
       name!.style.transform = `translate3d(${startX + (endX - startX) * p}px, ${startY + (endY - startY) * p}px, 0) scale(${scale})`;
       name!.style.letterSpacing = `${-.07 + .045 * p}em`;
       name!.style.fontWeight = `${500 + 50 * p}`;
+      name!.dataset.docked = String(raw >= .99);
     }
     function measure() {
       const box = hero!.getBoundingClientRect();
