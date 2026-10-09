@@ -7,10 +7,11 @@ export default async function verifyMobileProjects(page) {
   const bounds=async () => p.evaluate(() => {
     const r=s=>{const b=document.querySelector(s).getBoundingClientRect();return {top:b.top,bottom:b.bottom,left:b.left,right:b.right,height:b.height};};
     const content=document.querySelector('.project-front .trip-project-content, .clinic-project-content');
-    return {viewport:{width:innerWidth,height:innerHeight},header:r('.header'),browser:r('.project-browser'),card:r('.project-expanded-cover'),action:r('.project-front .project-flip-trigger'),overflowX:content.scrollWidth-content.clientWidth,overflowY:content.scrollHeight-content.clientHeight,storyBottom:document.querySelector('.trip-showcase-story p')?.getBoundingClientRect().bottom,controlsTop:document.querySelector('.trip-showcase-controls')?.getBoundingClientRect().top};
+    return {viewport:{width:innerWidth,height:innerHeight},header:r('.header'),browser:r('.project-browser'),card:r('.project-expanded-cover'),action:r('.project-front .project-flip-trigger'),overflowX:content.scrollWidth-content.clientWidth,overflowY:content.scrollHeight-content.clientHeight,hiddenFaceVisible:getComputedStyle(document.querySelector('.project-back')).visibility!=='hidden',storyBottom:document.querySelector('.trip-showcase-story p')?.getBoundingClientRect().bottom,controlsTop:document.querySelector('.trip-showcase-controls')?.getBoundingClientRect().top};
   });
   function check(result, label) {
     if(Math.abs(result.browser.top-result.header.bottom)>2 || result.card.bottom>result.viewport.height+1 || result.card.left<0 || result.card.right>result.viewport.width+1 || result.action.bottom>result.card.bottom || result.card.height<100 || result.overflowX>1) throw Error(label+': '+JSON.stringify(result));
+    if(result.hiddenFaceVisible) throw Error('Hidden reverse face is visible: '+JSON.stringify(result));
     if(result.storyBottom>result.controlsTop+1) throw Error('Slide text overlaps its controls: '+JSON.stringify(result));
   }
   try {

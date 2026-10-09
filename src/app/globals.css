@@ -875,6 +875,14 @@ main.container, .footer { position: relative; z-index: 1; }
   .project-front, .project-back,
   .project-expanded-cover[data-flipped="true"] .project-front,
   .project-expanded-cover[data-flipped="true"] .project-back { position: absolute; inset: 0; display: flex; flex-direction: column; min-width: 0; height: 100%; padding: 0; overflow: hidden; }
+  /* Explicit face visibility avoids mirrored backfaces in iOS compositing. */
+  .project-front, .project-back,
+  .project-expanded-cover[data-flipped="true"] .project-front,
+  .project-expanded-cover[data-flipped="true"] .project-back { transform: none; transition: opacity 180ms ease, visibility 180ms ease; }
+  .project-front { opacity: 1; visibility: visible; }
+  .project-back { opacity: 0; visibility: hidden; }
+  .project-expanded-cover[data-flipped="true"] .project-front { opacity: 0; visibility: hidden; }
+  .project-expanded-cover[data-flipped="true"] .project-back { opacity: 1; visibility: visible; }
   .project-expanded-cover .project-flip-trigger { position: relative; inset: auto; flex: 0 0 auto; display: flex; width: fit-content; max-width: calc(100% - 44px); justify-content: center; margin: 8px 18px 14px auto; padding: 10px 16px; min-height: 44px; font-size: 12px; gap: 12px; }
   .trip-project-content { flex: 1; height: auto; min-height: 0; min-width: 0; padding: 20px 20px 8px; gap: 16px; overflow: auto; overscroll-behavior-y: contain; scrollbar-width: thin; }
   .trip-project-content.trip-showcase { grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); grid-template-rows: auto minmax(min-content, 1fr) auto auto; text-align: left; }
@@ -982,6 +990,7 @@ main.container, .footer { position: relative; z-index: 1; }
   .stack-technologies { grid-template-columns: minmax(0, 1fr); }
 }
 @media (prefers-reduced-motion: reduce) {
+  .project-front, .project-back { transition: none !important; }
   .mobile-navigation:not([hidden]) { animation: none; }
   .project-name-card { transition: none; }
 }
