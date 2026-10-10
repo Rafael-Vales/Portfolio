@@ -457,18 +457,32 @@ export default function ParticlePortrait() {
       }
       // Sample the same cutout by luminance for night mode. Reuse the existing
       // particle count and logo/nav targets so the cycle and its density stay stable.
+      const shadows: { x: number; y: number; tone: number; order: number; rank: number }[] = [];
       const highlights: { x: number; y: number; tone: number; order: number; rank: number }[] = [];
       for (let y = 0; y < sample.height; y += 2) for (let x = 0; x < sample.width; x += 2) {
         const offset = (y * sample.width + x) * 4;
         const alpha = data[offset + 3] / 255;
         const luminance = (data[offset] * .2126 + data[offset + 1] * .7152 + data[offset + 2] * .0722) / 255;
+        // Match the fine grain of the night portrait while concentrating dark
+        // ink in the facial shadows. Fixed budget: no extra animated particles.
+        const shadow = Math.pow(1 - luminance, 1.35) * alpha;
+        if (shadow >= .025) shadows.push({ x, y, tone: shadow, order: offset,
+          rank: -Math.log(Math.max(.00001, noise(offset, 24))) / shadow });
         const tone = Math.pow(luminance, 1.45) * alpha;
         if (tone < .025) continue;
         highlights.push({ x, y, tone, order: offset,
           rank: -Math.log(Math.max(.00001, noise(offset, 19))) / tone });
       }
       const nightPoints = highlights.sort((a, b) => a.rank - b.rank).slice(0, dots.length).sort((a, b) => a.order - b.order);
+      const dayPoints = shadows.sort((a, b) => a.rank - b.rank).slice(0, dots.length).sort((a, b) => a.order - b.order);
       dots.forEach((p, index) => {
+        const day = dayPoints[index % dayPoints.length];
+        if (day) {
+          p.tx = ox + (day.x + (noise(index, 25) - .5) * 1.1) * scale;
+          p.ty = oy + (day.y + (noise(index, 26) - .5) * 1.1) * scale;
+          p.r = (.22 + .65 * Math.sqrt(day.tone)) * scale;
+          if (motion.matches) { p.x = p.tx; p.y = p.ty; }
+        }
         const point = nightPoints[index % nightPoints.length];
         if (!point) { p.nightR = p.r; return; }
         p.nightX = ox + (point.x + (noise(index, 20) - .5) * 1.1) * scale;

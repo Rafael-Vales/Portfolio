@@ -3,7 +3,7 @@ import { useLocale } from "./LocaleProvider";
 
 import { useEffect, useRef, useState } from "react";
 import JourneyIdentity from "./JourneyIdentity";
-import Image from "next/image";
+import MobileCareerJourney from "./MobileCareerJourney";
 import useMobileLayout from "./useMobileLayout";
 
 // Dates and roles come from Rafael's supplied CVs. Periods can overlap.
@@ -63,26 +63,6 @@ const chapters = [
 ];
 
   const mobile = useMobileLayout();
-  const [selected, setSelected] = useState(5);
-  const summaries = [
-    t("Tres años de formación en C# y .NET.", "Three years studying C# and .NET."),
-    t("Gastos compartidos, usuarios reales y menos transferencias.", "Shared expenses, real users and fewer transfers."),
-    t("Un ecommerce de punta a punta para un negocio real.", "An end-to-end ecommerce for a real business."),
-    t("Diseño y desarrollo de una experiencia nativa para iPhone.", "Design and development of a native iPhone experience."),
-    t("Tres cajas simultáneas, con ventas que funcionan sin conexión.", "Three simultaneous checkouts, with sales that work offline."),
-    t("Liderazgo técnico en un equipo de cuatro personas.", "Technical leadership in a four-person team."),
-  ];
-  useEffect(() => {
-    if (!mobile) return;
-    function selectFromHash() {
-      const id = window.location.hash.replace("#recorrido-", "");
-      const index = ["formacion", "dividamos", "animal-feed", "trippilot", "mercado-williams", "consultorio"].indexOf(id);
-      if (index >= 0) setSelected(index);
-    }
-    selectFromHash();
-    window.addEventListener("hashchange", selectFromHash);
-    return () => window.removeEventListener("hashchange", selectFromHash);
-  }, [mobile]);
   const section = useRef<HTMLElement>(null);
   const track = useRef<HTMLOListElement>(null);
   const markers = useRef<(HTMLSpanElement | null)[]>([]);
@@ -136,23 +116,7 @@ const chapters = [
     };
   }, [mobile]);
 
-  if (mobile) return <section id="recorrido" className="mobile-journey" aria-labelledby="journey-title">
-    <span className="journey-eyebrow">{t("Mi recorrido")}</span>
-    <h2 id="journey-title">{t("Aprender. Construir.", "Learn. Build.")}<br/><span>{t("Seguir.", "Keep going.")}</span></h2>
-    <button id="recorrido-formacion" className="mobile-journey-education" type="button" onClick={()=>setSelected(0)} aria-pressed={selected===0}>
-      <Image src="/images/rafael/journey-portrait.jpg" alt={t("Retrato de Rafael Vales", "Portrait of Rafael Vales")} width={100} height={160} sizes="100px"/>
-      <span>2023 — 2026<br/>IDRA<br/>{t("Desarrollo de Software", "Software Development")}</span>
-    </button>
-    <ol className="mobile-journey-list">{chapters.slice(1).map((chapter,index)=>{const i=index+1;return <li key={chapter.id} id={`recorrido-${chapter.id}`}><button type="button" aria-pressed={selected===i} aria-controls="journey-selected-detail" onClick={()=>setSelected(i)}>
-      <span className="mobile-journey-marker" aria-hidden="true" style={{maskImage:`url(/images/mobile/timeline${selected===i ? "-active" : ""}.svg)`,WebkitMaskImage:`url(/images/mobile/timeline${selected===i ? "-active" : ""}.svg)`}}/>
-      <span className="mobile-journey-year">{chapter.year}</span><span>{chapter.name}</span>
-    </button></li>;})}</ol>
-    <details key={selected} id="journey-selected-detail" className="mobile-journey-detail">
-      <summary><span className="mobile-journey-period">{chapters[selected].period} · {chapters[selected].category}</span><span>{summaries[selected]}</span><span className="journey-detail-cue">{t("Ver detalle", "Read more")} <span aria-hidden="true">↗</span></span></summary>
-      <p>{chapters[selected].description}</p><ul className="journey-technologies">{chapters[selected].technologies.map(technology=><li key={technology}>{technology}</li>)}</ul>
-    </details>
-    <a className="mobile-primary-action" href={cv} target="_blank" rel="noopener noreferrer">{t("Ver mi CV", "View my resume")} <span aria-hidden="true">↗</span></a>
-  </section>;
+  if (mobile) return <MobileCareerJourney chapters={chapters} cv={cv}/>;
 
   return <section id="recorrido" ref={section} className="career-journey" aria-labelledby="journey-title">
     <div className="journey-introduction">
