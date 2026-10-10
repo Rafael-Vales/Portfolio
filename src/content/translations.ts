@@ -25,7 +25,7 @@ const translations: Record<string, string> = {
   "Formación": "Education",
   "Una base para construir.": "A foundation to build on.",
   "Tecnicatura Superior en Desarrollo de Software · Instituto Superior IDRA": "Higher Technical Degree in Software Development · Instituto Superior IDRA",
-  "Tres años de formación centrada en C# y .NET. Programación orientada a objetos, arquitectura MVC y patrones de diseño aplicados a proyectos de escritorio.": "Three years of education focused on C# and .NET. Object-oriented programming, MVC architecture and design patterns applied to desktop projects.",
+  "Tres años de formación en C#, .NET, SQL y bases de datos. Programación orientada a objetos, arquitectura MVC y patrones de diseño aplicados a proyectos de escritorio.": "Three years of education in C#, .NET, SQL and databases. Object-oriented programming, MVC architecture and design patterns applied to desktop projects.",
   "Una base que hoy llevo a mis proyectos web y mobile.": "A foundation I now bring to my web and mobile projects.",
   "Dic 2024 — Presente": "Dec 2024 — Present",
   "Proyecto propio": "Personal project",

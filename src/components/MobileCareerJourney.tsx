@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import { useLocale } from "./LocaleProvider";
+import JourneyProjectLogo from "./JourneyProjectLogo";
 
 type Chapter = {
   id: string; year: string; period: string; category: string; name: string;
@@ -18,7 +19,7 @@ const titles = [
   ["Lidero un equipo de cuatro personas.", "I lead a four-person team."],
 ];
 const summaries = [
-  ["Tres años en IDRA: C#, .NET y bases que hoy aplico a mis productos.", "Three years at IDRA: C#, .NET and foundations I now apply to my products."],
+  ["Tres años en IDRA: C#, .NET, SQL y bases de datos que hoy aplico a mis productos.", "Three years at IDRA: C#, .NET, SQL and databases I now apply to my products."],
   ["De una necesidad cotidiana a un producto con usuarios reales.", "From an everyday need to a product with real users."],
   ["Del catálogo al pago, trabajando para Los Abuelos Pet Shop.", "From catalog to payment, working for Los Abuelos Pet Shop."],
   ["Itinerarios, mapas y lugares en una experiencia nativa. En desarrollo.", "Itineraries, maps and places in a native experience. In development."],
@@ -106,7 +107,7 @@ export default function MobileCareerJourney({chapters, cv}: {chapters: Chapter[]
       if (target >= 0) { event.preventDefault(); goTo(target); }
     }}>
       {chapters.map((chapter, index) => <li key={chapter.id} className="journey-slide" id={`recorrido-${chapter.id}`} inert={active !== index} aria-hidden={active !== index}>
-        <div className="journey-slide-meta"><span>{chapter.period}</span><span>{chapter.category}</span></div>
+        <div className="journey-stage-header"><div className="journey-slide-meta"><span>{chapter.period}</span><span>{chapter.category}</span></div><JourneyProjectLogo id={chapter.id}/></div>
         <h3>{t(titles[index][0], titles[index][1])}</h3>
         <p className="journey-slide-summary">{t(summaries[index][0], summaries[index][1])}</p>
         {index === 0 && <div className="journey-study"><Image src="/images/rafael/journey-portrait.jpg" alt={t("Retrato de Rafael Vales", "Portrait of Rafael Vales")} width={58} height={96} sizes="58px"/><span>IDRA<small>{t("Desarrollo de Software", "Software Development")}</small></span></div>}

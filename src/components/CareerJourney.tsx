@@ -3,6 +3,7 @@ import { useLocale } from "./LocaleProvider";
 
 import { useEffect, useRef, useState } from "react";
 import JourneyIdentity from "./JourneyIdentity";
+import JourneyProjectLogo from "./JourneyProjectLogo";
 import MobileCareerJourney from "./MobileCareerJourney";
 import useMobileLayout from "./useMobileLayout";
 
@@ -16,9 +17,9 @@ const chapters = [
     id: "formacion", year: "2023", period: "2023 — 2026", category: t("Formación"), name: "IDRA",
     title: t("Una base para construir."),
     role: t("Tecnicatura Superior en Desarrollo de Software · Instituto Superior IDRA"),
-    description: t("Tres años de formación centrada en C# y .NET. Programación orientada a objetos, arquitectura MVC y patrones de diseño aplicados a proyectos de escritorio."),
+    description: t("Tres años de formación en C#, .NET, SQL y bases de datos. Programación orientada a objetos, arquitectura MVC y patrones de diseño aplicados a proyectos de escritorio."),
     takeaway: t("Una base que hoy llevo a mis proyectos web y mobile."),
-    technologies: ["C#", ".NET", "Windows Forms", "SOLID"],
+    technologies: ["C#", ".NET", "SQL", t("Bases de datos", "Databases"), "Windows Forms", "SOLID"],
   },
   {
     id: "dividamos", year: "2024", period: t("Dic 2024 — Presente"), category: t("Proyecto propio"), name: "Dividamos",
@@ -138,7 +139,7 @@ const chapters = [
     <ol ref={track} className="journey-track">
       {chapters.map((chapter, index) => <li key={chapter.id} id={`recorrido-${chapter.id}`} className="journey-chapter" data-active={active === index} data-complete={index < active}>
         <span className="journey-marker" ref={marker => { markers.current[index] = marker; }} aria-hidden="true" />
-        <div className="journey-chapter-meta"><span>{chapter.period}</span><span>{chapter.category}</span></div>
+        <div className="journey-stage-header"><div className="journey-chapter-meta"><span>{chapter.period}</span><span>{chapter.category}</span></div><JourneyProjectLogo id={chapter.id}/></div>
         <h3>{chapter.title}</h3>
         <p className="journey-role">{chapter.role}</p>
         <p className="journey-description">{chapter.description}</p>
