@@ -4,6 +4,7 @@ import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import { useLocale } from "./LocaleProvider";
 import JourneyProjectLogo from "./JourneyProjectLogo";
+import { JourneyWords, useJourneyWords } from "./JourneyWords";
 
 type Chapter = {
   id: string; year: string; period: string; category: string; name: string;
@@ -30,92 +31,88 @@ const summaries = [
 export default function MobileCareerJourney({chapters, cv}: {chapters: Chapter[]; cv: string}) {
   const {t} = useLocale();
   const [active, setActive] = useState(0);
-  const rail = useRef<HTMLOListElement>(null);
-  const timeline = useRef<HTMLElement>(null);
+  const stage = useRef<HTMLElement>(null);
   const current = useRef(0);
-  const positions = useRef<number[]>([]);
+  const captureWords = useJourneyWords(stage, active);
+  const gesture = useRef<{x: number; y: number; id: number; horizontal: boolean} | null>(null);
 
   function goTo(index: number) {
-    if (!rail.current) return;
-    rail.current.scrollTo({left: positions.current[index] ?? 0,
-      behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth"});
+    const next = Math.max(0, Math.min(chapters.length - 1, index));
+    if (next === current.current) return;
+    captureWords();
+    current.current = next;
+    setActive(next);
   }
 
   useEffect(() => {
-    const element = rail.current;
-    if (!element) return;
-    let frame = 0;
-    function paint() {
-      frame = 0;
-      const left = element!.scrollLeft;
-      const last = positions.current.at(-1) || 1;
-      timeline.current?.style.setProperty("--time-progress", String(Math.max(0, Math.min(1, left / last))));
-      let next = 0;
-      positions.current.forEach((position, index) => {
-        if (Math.abs(position - left) < Math.abs(positions.current[next] - left)) next = index;
-      });
-      if (next !== current.current) {
-        // Close expanded content on departure so each new stage stays compact.
-        element!.querySelectorAll("details[open]").forEach(detail => detail.removeAttribute("open"));
-        current.current = next;
-        setActive(next);
-      }
-    }
-    function schedule() { if (!frame) frame = requestAnimationFrame(paint); }
-    function measure() {
-      positions.current = Array.from(element!.children).map(child => (child as HTMLElement).offsetLeft - (element!.firstElementChild as HTMLElement).offsetLeft);
-      element!.scrollTo({left: positions.current[current.current] || 0, behavior: "instant"});
-      paint();
-    }
     function fromHash() {
-      if (location.hash === "#recorrido") {
-        document.getElementById("recorrido")?.scrollIntoView({block: "start", behavior: "instant"});
-        return;
-      }
       const index = ids.indexOf(location.hash.replace("#recorrido-", ""));
-      if (index < 0) return;
-      current.current = index;
-      setActive(index);
-      element!.scrollTo({left: positions.current[index] || 0, behavior: "instant"});
-      document.getElementById("recorrido")?.scrollIntoView({block: "start", behavior: "instant"});
-      paint();
+      if (index >= 0) {
+        current.current = index;
+        setActive(index);
+      }
+      if (index >= 0 || location.hash === "#recorrido") {
+        document.getElementById("recorrido")?.scrollIntoView({block: "start", behavior: "instant"});
+      }
     }
-    const resize = new ResizeObserver(measure);
-    resize.observe(element);
-    element.addEventListener("scroll", schedule, {passive: true});
     window.addEventListener("hashchange", fromHash);
-    measure(); fromHash();
-    return () => { cancelAnimationFrame(frame); resize.disconnect(); element.removeEventListener("scroll", schedule); window.removeEventListener("hashchange", fromHash); };
+    fromHash();
+    return () => window.removeEventListener("hashchange", fromHash);
   }, []);
+
+  const chapter = chapters[active];
+  const title = t(titles[active][0], titles[active][1]);
+  const summary = t(summaries[active][0], summaries[active][1]);
 
   return <section id="recorrido" className="mobile-journey" aria-labelledby="journey-title">
     <span className="journey-eyebrow">{t("Mi recorrido")}</span>
     <h2 id="journey-title">{t("Aprender. Construir.", "Learn. Build.")}<br/><span>{t("Seguir.", "Keep going.")}</span></h2>
-    <nav ref={timeline} className="journey-timebar" aria-label={t("Etapas de mi recorrido", "Career stages")}>
+    <nav className="journey-timebar" style={{"--time-progress": active / (chapters.length - 1)} as React.CSSProperties} aria-label={t("Etapas de mi recorrido", "Career stages")}>
       <span className="journey-time-line" aria-hidden="true"/>
-      {chapters.map((chapter, index) => <button key={chapter.id} type="button" onClick={() => goTo(index)} aria-pressed={active === index} aria-controls={`recorrido-${chapter.id}`} aria-label={`${chapter.year} · ${chapter.name}`}>
+      {chapters.map((chapter, index) => <button key={chapter.id} type="button" onClick={() => goTo(index)} aria-pressed={active === index} aria-controls="journey-reading-stage" aria-label={`${chapter.year} · ${chapter.name}`}>
         <span className="journey-time-dot" aria-hidden="true"/><span>{chapter.year}</span>
       </button>)}
     </nav>
     <div className="journey-carousel-controls">
-      <span><strong>{chapters[active].name}</strong><small>{String(active + 1).padStart(2, "0")} / 06</small></span>
+      <span aria-live="polite" aria-atomic="true"><strong>{chapters[active].name}</strong><small>{String(active + 1).padStart(2, "0")} / 06</small></span>
       <div><button type="button" onClick={() => goTo(active - 1)} disabled={active === 0} aria-label={t("Etapa anterior", "Previous stage")}>←</button><button type="button" onClick={() => goTo(active + 1)} disabled={active === chapters.length - 1} aria-label={t("Etapa siguiente", "Next stage")}>→</button></div>
     </div>
-    <ol ref={rail} className="journey-carousel" aria-label={t("Deslizá para recorrer las etapas", "Swipe through the stages")} tabIndex={0} onKeyDown={event => {
+    <div id="journey-reading-stage" className="journey-carousel" role="region" aria-roledescription={t("Recorrido", "Journey")} aria-label={t("Deslizá para recorrer las etapas", "Swipe through the stages")} tabIndex={0} onKeyDown={event => {
       if (event.target !== event.currentTarget) return;
-      const target = event.key === "ArrowRight" ? Math.min(5, active + 1) : event.key === "ArrowLeft" ? Math.max(0, active - 1) : event.key === "Home" ? 0 : event.key === "End" ? 5 : -1;
+      const target = event.key === "ArrowRight" ? active + 1 : event.key === "ArrowLeft" ? active - 1 : event.key === "Home" ? 0 : event.key === "End" ? chapters.length - 1 : -1;
       if (target >= 0) { event.preventDefault(); goTo(target); }
-    }}>
-      {chapters.map((chapter, index) => <li key={chapter.id} className="journey-slide" id={`recorrido-${chapter.id}`} inert={active !== index} aria-hidden={active !== index}>
-        <div className="journey-stage-header"><div className="journey-slide-meta"><span>{chapter.period}</span><span>{chapter.category}</span></div><JourneyProjectLogo id={chapter.id}/></div>
-        <h3>{t(titles[index][0], titles[index][1])}</h3>
-        <p className="journey-slide-summary">{t(summaries[index][0], summaries[index][1])}</p>
-        {index === 0 && <div className="journey-study"><Image src="/images/rafael/journey-portrait.jpg" alt={t("Retrato de Rafael Vales", "Portrait of Rafael Vales")} width={58} height={96} sizes="58px"/><span>IDRA<small>{t("Desarrollo de Software", "Software Development")}</small></span></div>}
-        <details className="journey-slide-detail"><summary><span>{t("Profundizar en esta etapa", "More about this stage")}</span><span className="journey-expand-icon" aria-hidden="true">+</span></summary>
+    }} onPointerDown={event => {
+      if (!event.isPrimary || event.pointerType === "mouse" || (event.target as HTMLElement).closest("button, a, details")) return;
+      gesture.current = {x: event.clientX, y: event.clientY, id: event.pointerId, horizontal: false};
+    }} onPointerMove={event => {
+      const start = gesture.current;
+      if (!start || start.id !== event.pointerId) return;
+      const dx = event.clientX - start.x;
+      const dy = event.clientY - start.y;
+      if (!start.horizontal && Math.abs(dy) > 12 && Math.abs(dy) > Math.abs(dx)) { gesture.current = null; return; }
+      if (!start.horizontal && Math.abs(dx) > 12 && Math.abs(dx) > Math.abs(dy) * 1.2) {
+        start.horizontal = true;
+        event.currentTarget.setPointerCapture(event.pointerId);
+      }
+    }} onPointerUp={event => {
+      const start = gesture.current;
+      gesture.current = null;
+      if (!start || start.id !== event.pointerId) return;
+      const dx = event.clientX - start.x;
+      const dy = event.clientY - start.y;
+      if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy) * 1.2) goTo(current.current + (dx < 0 ? 1 : -1));
+    }} onPointerCancel={() => { gesture.current = null; }}>
+      <article ref={stage} className="journey-slide" id={`recorrido-${chapter.id}`}>
+        <div className="journey-stage-header"><div className="journey-slide-meta"><span>{chapter.period}</span><span>{chapter.category}</span></div>{active === 0 ? <Image className="journey-stage-portrait" src="/images/rafael/journey-portrait.jpg" alt={t("Retrato de Rafael Vales", "Portrait of Rafael Vales")} width={34} height={56} sizes="34px"/> : <JourneyProjectLogo id={chapter.id}/>}</div>
+        <div className="journey-word-copy">
+          <h3 aria-label={title}><JourneyWords text={title} group="title"/></h3>
+          <p className="journey-slide-summary"><JourneyWords text={summary} group="summary"/></p>
+        </div>
+        <details key={chapter.id} className="journey-slide-detail"><summary><span>{t("Profundizar en esta etapa", "More about this stage")}</span><span className="journey-expand-icon" aria-hidden="true">+</span></summary>
           <p className="journey-slide-role">{chapter.role}</p><p>{chapter.description}</p><ul className="journey-technologies" aria-label={t("Tecnologías y prácticas", "Technologies and practices")}>{chapter.technologies.map(technology => <li key={technology}>{technology}</li>)}</ul><p className="journey-slide-takeaway">↳ {chapter.takeaway}</p>
         </details>
-      </li>)}
-    </ol>
+      </article>
+    </div>
     <p className="journey-swipe-hint">{t("Deslizá para seguir el recorrido", "Swipe to continue the journey")} <span aria-hidden="true">↔</span></p>
     <a className="mobile-primary-action" href={cv} target="_blank" rel="noopener noreferrer">{t("Ver mi CV", "View my resume")} <span aria-hidden="true">↗</span></a>
   </section>;
