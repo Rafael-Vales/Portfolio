@@ -24,6 +24,9 @@ export default function ScrollName() {
       // Typography stays identical throughout the trip: switching tracking or
       // weight at arrival changes the text width and causes a visible snap.
       name!.dataset.docked = String(raw >= 1);
+      // Server-rendered HTML can paint before hydration. Reveal only after the
+      // first measured transform, so the large name never flashes at (0, 0).
+      name!.dataset.positioned = "true";
     }
     function measure() {
       if (compact && measuredWidth === document.documentElement.clientWidth) return;
@@ -46,7 +49,7 @@ export default function ScrollName() {
     window.addEventListener("scroll", scroll, { passive: true });
     window.addEventListener("resize", measure);
     reduce.addEventListener("change", paint);
-    return () => { cancelAnimationFrame(raf); window.removeEventListener("scroll", scroll); window.removeEventListener("resize", measure); reduce.removeEventListener("change", paint); };
+    return () => { cancelAnimationFrame(raf); delete name.dataset.positioned; window.removeEventListener("scroll", scroll); window.removeEventListener("resize", measure); reduce.removeEventListener("change", paint); };
   }, []);
   return <h1 ref={ref} id="presentacion" className="scroll-name"><a href="#contenido">Rafael Vales<span>.</span></a></h1>;
 }

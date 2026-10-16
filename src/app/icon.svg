@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 320">
+  <style>
+    .base { fill: #fafaf9; }
+    .r { fill: #212321; stroke: #fafaf9; }
+    .v { fill: #6b8876; }
+    @media (prefers-color-scheme: dark) {
+      .base { fill: #141715; }
+      .r { fill: #eef0eb; stroke: #141715; }
+      .v { fill: #9bbba7; }
+    }
+  </style>
+  <rect class="base" width="360" height="320" rx="64"/>
+  <path class="v" d="M 65 44 L 110 44 L 230 236 L 283 44 L 329 44 L 260 276 L 205 276 Z"/>
+  <path class="r" fill-rule="evenodd" stroke-width="3" stroke-linejoin="round" paint-order="stroke" d="M 36 276 L 84 44 L 178 44 C 259 44 273 138 196 164 L 260 276 L 205 276 L 143 163 L 111 163 L 88 276 Z M 120 82 L 111 126 L 169 126 C 207 126 217 82 179 82 Z"/>
+</svg>
