@@ -66,7 +66,7 @@ export default function MobileCareerJourney({chapters, cv}: {chapters: Chapter[]
 
   return <section id="recorrido" className="mobile-journey" aria-labelledby="journey-title">
     <span className="journey-eyebrow">{t("Mi recorrido")}</span>
-    <h2 id="journey-title">{t("Aprender. Construir.", "Learn. Build.")}<br/><span>{t("Seguir.", "Keep going.")}</span></h2>
+    <h2 id="journey-title">{t("Cada proyecto me enseñó algo que usé en el siguiente.", "Each project taught me something I used in the next.")}</h2>
     <nav className="journey-timebar" style={{"--time-progress": active / (chapters.length - 1)} as React.CSSProperties} aria-label={t("Etapas de mi recorrido", "Career stages")}>
       <span className="journey-time-line" aria-hidden="true"/>
       {chapters.map((chapter, index) => <button key={chapter.id} type="button" onClick={() => goTo(index)} aria-pressed={active === index} aria-controls="journey-reading-stage" aria-label={`${chapter.year} · ${chapter.name}`}>

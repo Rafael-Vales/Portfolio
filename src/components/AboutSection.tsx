@@ -1,5 +1,6 @@
 "use client";
 import { useLocale } from "./LocaleProvider";
+import Image from "next/image";
 
 import { useEffect, useRef } from "react";
 import TechnologyStack from "@/components/TechnologyStack";
@@ -9,7 +10,6 @@ import TechnologyStack from "@/components/TechnologyStack";
 export default function AboutSection() {
   const {t}=useLocale();
 const approach = [
-  { short: t("Jerarquía, espacio y claridad.", "Hierarchy, space and clarity."), title: t("Diseño"), description: t("Jerarquía, espacio y claridad. Cada decisión visual tiene que ayudar a entender y usar el producto.") },
   { short: t("Interacciones fluidas y detalles cuidados.", "Fluid interactions and thoughtful details."), title: "Frontend", description: t("Interacciones fluidas y detalles cuidados. Me interesa tanto lo que se ve como lo que pasa al tocarlo.") },
   { short: t("La interfaz conectada con lo que la hace funcionar.", "An interface connected to what makes it work."), title: t("Producto"), description: t("Una mirada fullstack para conectar la interfaz con lo que necesita para funcionar.") },
 ];
@@ -40,8 +40,20 @@ const approach = [
       </div>
     </div>
     <div className="about-approach" aria-label={t("Mi forma de trabajar")}>
+      <div className="about-design-feature about-reveal">
+        <figure className="about-design-figure">
+          <div className="about-design-image"><div className="about-design-phone">
+            <Image src="/images/trippilot/demo-itinerary.png" alt={t("Pantalla del itinerario de TripPilot", "TripPilot itinerary screen")} width={1206} height={2622} sizes="(max-width: 700px) 114px, 160px" />
+          </div></div>
+          <figcaption>TripPilot · {t("diseño y desarrollo", "design and development")}</figcaption>
+        </figure>
+        <div className="about-design-copy"><span className="about-principle-number">01 / {t("Diseño")}</span>
+          <h3>{t("Jerarquía, espacio y claridad.", "Hierarchy, space and clarity.")}</h3>
+          <p>{t("Cada decisión visual tiene que ayudar a entender y usar el producto.", "Every visual decision should make the product easier to understand and use.")}</p>
+        </div>
+      </div>
       {approach.map((item, index) => <div className="about-principle about-reveal" key={item.title} style={{ transitionDelay: `${120 + index * 90}ms` }}>
-        <span className="about-principle-number" aria-hidden="true">0{index + 1}</span>
+        <span className="about-principle-number" aria-hidden="true">0{index + 2}</span>
         <h3>{item.title}</h3><p><span className="about-description-desktop">{item.description}</span><span className="about-description-mobile">{item.short}</span></p>
       </div>)}
     </div>

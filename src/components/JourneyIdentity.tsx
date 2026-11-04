@@ -44,7 +44,7 @@ export default function JourneyIdentity() {
   return <div ref={identity} className="journey-identity" data-photo={photo}>
     <div className="journey-identity-turn">
       <div className="journey-identity-copy">
-        <h2 id="journey-title">{t("Aprender.")}<br />{t("Construir.")}<br /><span>{t("Seguir.")}</span></h2>
+        <h2 id="journey-title">{t("Cada proyecto me enseñó algo que usé en el siguiente.", "Each project taught me something I used in the next.")}</h2>
         <p>{t("De la formación a productos reales. Un recorrido por lo que fui construyendo y lo que sigo desarrollando.")}</p>
       </div>
       <div className="journey-identity-photo" aria-hidden={!photo}>

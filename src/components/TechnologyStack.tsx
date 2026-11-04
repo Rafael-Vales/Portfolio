@@ -89,7 +89,8 @@ const groups = [
                 "--stack-icon": `url(/images/technologies/${technology.icon}.svg)`,
               } as CSSProperties} /> : technology.mark}
             </span>
-            <span><strong>{technology.name}</strong><span className="stack-detail">{technology.detail}</span></span>
+            <span className="stack-technology-copy"><strong>{technology.name}</strong><span className="stack-detail">{technology.detail}</span></span>
+            <span className="stack-selection-arrow" aria-hidden="true">↗</span>
           </button></li>)}
         </ul>
       </div>)}
