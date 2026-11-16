@@ -55,9 +55,9 @@ const chapters = [
   },
   {
     id: "consultorio", year: "2026", period: t("2026 — Presente"), category: t("En desarrollo"), name: t("Consultorio"),
-    title: t("Construir en equipo."),
+    title: t("De la reserva a la atención clínica.", "From booking to clinical care."),
     role: t("Tech Lead · Consultorio dermatológico"),
-    description: t("Lidero técnicamente un equipo de cuatro personas en un sistema para un consultorio real. Participo del relevamiento con la clienta y del modelo de datos para conectar turnos, señas y atención clínica. El producto sigue en desarrollo.", "I lead a four-person technical team building a system for a real clinic. I contribute to client requirements and the data model connecting appointments, deposits and clinical care. The product is still in development."),
+    description: t("Lidero técnicamente un equipo de cuatro personas en una tesis para un consultorio real. Trabajo con la clienta y el equipo para conectar la reserva móvil, la agenda de recepción, la revisión de señas y el seguimiento clínico. El sistema sigue en desarrollo.", "I lead a four-person technical team on a thesis project for a real clinic. I work with the client and the team to connect mobile booking, the reception schedule, deposit review, and clinical follow-up. The system is still in development."),
     takeaway: t("Traducir un proceso real en reglas de negocio, permisos y decisiones compartidas.", "Translating a real workflow into business rules, permissions and shared decisions."),
     technologies: ["Next.js", "TypeScript", "Prisma", "Supabase", "Scrum / Jira"],
   },

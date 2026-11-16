@@ -3,6 +3,7 @@
 import ProjectColorPaint, { type PaintOrigin } from "./ProjectColorPaint";
 import AnimalFeedLogo from "./AnimalFeedLogo";
 import AnimalFeedShowcase from "./AnimalFeedShowcase";
+import ClinicShowcase from "./ClinicShowcase";
 import TripPilotShowcase from "./TripPilotShowcase";
 import { createPortal, flushSync } from "react-dom";
 import ProjectBack from "./ProjectBack";
@@ -376,19 +377,7 @@ const projects = [
                                       {!tryingStore && <div className="trip-project-emblem animal-project-emblem" style={{viewTransitionName:"project-mark"}}><AnimalFeedLogo /></div>}
                                     </>
                                 ) : (
-									<div className="clinic-project-content">
-                                      <span className="clinic-project-status">{t("En desarrollo")}</span>
-                                      <span className="clinic-project-eyebrow">{t("Gestión clínica · Una necesidad real", "Clinic management · A real need")}</span>
-                                      <h3>{t("Consultorio")}<br />{t("dermatológico.")}</h3>
-                                      <p>{t("De coordinar turnos y señas por WhatsApp a diseñar un sistema que conecte recepción, agenda y seguimiento clínico.", "From coordinating appointments and deposits over WhatsApp to designing a system that connects reception, scheduling and clinical follow-up.")}</p>
-                                      <ul className="clinic-project-scope" aria-label={t("Alcance del proyecto", "Project scope")}>
-                                        <li>{t("Turnos y señas", "Appointments & deposits")}</li>
-                                        <li>{t("Recepción y atención", "Reception & consultations")}</li>
-                                        <li>{t("Historia clínica e imágenes", "Medical records & images")}</li>
-                                      </ul>
-                                      <span className="clinic-project-note">{t("Tech Lead · Equipo de cuatro personas","Tech Lead · Four-person team")}</span>
-                                      <small className="clinic-project-stage">{t("Desarrollo por etapas · Demostraciones con datos ficticios", "Incremental development · Demonstrations with fictional data")}</small>
-                                    </div>
+									<ClinicShowcase />
 								)}
                                 {!tryingStore && <button ref={flipOpen} type="button" className="project-flip-trigger" onClick={()=>flip(true)}>{t("Cómo lo construí","How I built it")} <span aria-hidden="true">↻</span></button>}
                                 </div>

@@ -25,7 +25,7 @@ const summaries = [
   ["Del catálogo al pago, trabajando para Los Abuelos Pet Shop.", "From catalog to payment, working for Los Abuelos Pet Shop."],
   ["Itinerarios, mapas y lugares en una experiencia nativa. En desarrollo.", "Itineraries, maps and places in a native experience. In development."],
   ["Tres cajas simultáneas. Las ventas siguen aunque se corte internet.", "Three simultaneous checkouts. Sales continue even when internet stops."],
-  ["Turnos, señas y atención clínica para un consultorio real. En desarrollo.", "Appointments, deposits and clinical care for a real clinic. In development."],
+  ["Tesis para un consultorio real: reserva móvil, agenda, señas y seguimiento clínico.", "Thesis project for a real clinic: mobile booking, scheduling, deposits, and clinical follow-up."],
 ];
 
 export default function MobileCareerJourney({chapters, cv}: {chapters: Chapter[]; cv: string}) {

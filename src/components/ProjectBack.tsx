@@ -9,9 +9,9 @@ const details = [
  role:["Desarrollé el catálogo, carrito, checkout y ciclo de órdenes de punta a punta.","I developed the catalog, cart, checkout and order lifecycle end to end."],
  decision:["Integración con MercadoPago: claves de idempotencia, validación de webhooks y reconciliación con reintentos para evitar cobros duplicados.","MercadoPago integration: idempotency keys, webhook validation and reconciliation with retries to prevent duplicate charges."],
  stack:["Next.js","TypeScript","Prisma","PostgreSQL","MercadoPago"], status:["Demo disponible · Productos de ejemplo y compra simulada","Demo available · Sample products and simulated checkout"] },
- { title:["De un problema cotidiano a un sistema clínico.","From an everyday problem to a clinical system."], intro:["El consultorio coordina turnos por WhatsApp y confirma la reserva al recibir una seña. El proyecto nace para ordenar ese circuito y conectar la gestión administrativa con la atención dermatológica.","The clinic coordinates appointments over WhatsApp and confirms bookings after receiving a deposit. The project aims to organize that workflow and connect administration with dermatology care."],
- role:["Como Tech Lead de un equipo de cuatro, trabajo en el relevamiento con la clienta, el diseño del modelo de datos y las decisiones técnicas. El alcance se define con el consultorio y el trabajo se organiza con Scrum y Jira.","As Tech Lead of a four-person team, I work on requirements gathering with the client, data model design and technical decisions. Scope is defined with the clinic, and work is organized with Scrum and Jira."],
- decision:["El diseño contempla retenciones temporales de turnos y conflictos de reserva. Para los datos clínicos, separa permisos administrativos y médicos, y conserva las correcciones como nuevos registros. La autorización del servidor complementa las políticas RLS de Supabase.","The design accounts for temporary appointment holds and booking conflicts. For clinical data, it separates administrative and medical permissions and preserves corrections as new records. Server-side authorization complements Supabase RLS policies."],
+ { title:["De la reserva al seguimiento de la consulta.","From booking to clinical follow-up."], intro:["La tesis parte de un circuito real: coordinar turnos por WhatsApp y confirmar la reserva al recibir una seña. El sistema reúne la reserva móvil, la agenda de recepción, la revisión de comprobantes y el seguimiento clínico.","The thesis starts with a real workflow: scheduling appointments on WhatsApp and confirming bookings after a deposit. The system brings together mobile booking, the reception schedule, receipt review, and clinical follow-up."],
+ role:["Lidero técnicamente un equipo de cuatro personas. Trabajo con el consultorio para convertir su forma de atender en reglas de negocio, participo del diseño del modelo de datos y coordino las decisiones técnicas y la revisión de los flujos.","I lead a four-person technical team. I work with the clinic to turn its workflows into business rules, contribute to the data model, and coordinate technical decisions and workflow reviews."],
+ decision:["Las retenciones temporales protegen el horario mientras se completa la reserva. Para los datos clínicos, la autorización del servidor y las políticas RLS de Supabase separan los permisos de recepción y dermatología. Las correcciones se conservan como nuevos registros para mantener la trazabilidad.","Temporary holds protect the time slot while the booking is completed. For clinical data, server-side authorization and Supabase RLS policies separate reception and dermatology permissions. Corrections are stored as new records to preserve the audit trail."],
  stack:["Next.js","TypeScript","Prisma","PostgreSQL","Supabase","Scrum / Jira"], status:["En desarrollo · Flujos demostrativos con datos ficticios · Sin puesta en producción","In development · Demonstration workflows with fictional data · Not yet in production"] }
 ];
 export default function ProjectBack({ index }: { index: number }) {
@@ -20,6 +20,17 @@ export default function ProjectBack({ index }: { index: number }) {
    <span className="case-eyebrow">{t("Detrás del proyecto","Behind the project")}</span>
    <h3>{t(d.title[0],d.title[1])}</h3><p className="case-intro">{t(d.intro[0],d.intro[1])}</p>
    <div className="case-columns"><div><h4>{t("Mi aporte","My contribution")}</h4><p>{t(d.role[0],d.role[1])}</p></div><div><h4>{t("Una decisión técnica","A technical decision")}</h4><p>{t(d.decision[0],d.decision[1])}</p></div></div>
+   {index === 2 && (
+     <div className="case-clinic-scope">
+       <h4>{t("Flujos del sistema", "System workflows")}</h4>
+       <ul>
+         <li>{t("Pacientes: reserva desde el celular, carga del comprobante y consulta de próximos turnos.", "Patients: mobile booking, uploading proof of payment, and checking upcoming appointments.")}</li>
+         <li>{t("Recepción: agenda con disponibilidad y bloqueos, revisión de señas, devoluciones e historial de pagos.", "Reception: schedule availability and time blocks, deposit review, refunds, and payment history.")}</li>
+         <li>{t("Dermatología: ficha clínica, evoluciones, fotos e indicaciones con acceso por rol.", "Dermatology: patient records, progress notes, photos, and care instructions with role-based access.")}</li>
+         <li>{t("Administración: configuración de tipos de turno, coberturas y condiciones de seña, con estadísticas de la operación.", "Administration: appointment types, coverage, and deposit rules, plus operational statistics.")}</li>
+       </ul>
+     </div>
+   )}
    <ul className="case-stack">{d.stack.map(s=><li key={s}>{s}</li>)}</ul>
    <small>{t(d.status[0],d.status[1])}</small>
  </div>;
