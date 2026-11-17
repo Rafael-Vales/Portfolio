@@ -4,31 +4,23 @@ import { useLocale } from "./LocaleProvider";
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 
-type Slide = { image: string; label: string; title: string; text: string; alt: string; video?: string };
-
-
-
 export default function TripPilotShowcase({ active }: { active: boolean }) {
-  const {t}=useLocale();
-const slides: Slide[] = [
-  { image: "home", label: t("Inicio"), title: t("Tu día, de un vistazo."), text: t("La próxima actividad, tu alojamiento y los pendientes del viaje. Lo que necesitás para empezar el día."), alt: t("Inicio de TripPilot en Lisboa con próxima actividad, alojamiento y tareas pendientes") },
-  { image: "itinerary", label: t("Itinerario"), title: t("Cada parada, en su lugar."), text: t("Organizá las actividades de cada día, cambiá su orden y consultá los tiempos entre una parada y otra."), alt: t("Itinerario de Lisboa con selector de días, actividades y controles para reordenar") },
-  { image: "discover", label: t("Recomendaciones"), title: t("Descubrí qué hay cerca."), text: t("Explorá las sugerencias de la ciudad en el mapa. Encontrá museos, parques y lugares para sumar a tu viaje."), alt: t("Mapa de recomendaciones en Lisboa con lugares de distintas categorías") },
-  { image: "saved", label: t("Guardados"), title: t("Tus lugares, siempre a mano."), text: t("Reuní los lugares que querés conocer y ubicá en el mapa cuáles te quedan pendientes y cuáles ya visitaste."), alt: t("Mapa de lugares guardados con filtros de pendientes y visitados") },
-  { image: "route", label: t("Ruta"), title: t("El recorrido completo."), text: t("Visualizá el orden de las paradas, la distancia y el tiempo estimado. Compará el recorrido a pie, en coche o en transporte público."), alt: t("Ruta por cuatro lugares de Lisboa con distancia, tiempo y opciones de transporte") },
-  { image: "discover-video", video: "discover", label: t("Del lugar al plan"), title: t("De descubrirlo a visitarlo."), text: t("Explorá recomendaciones, guardá un lugar y sumalo a tu plan. Elegí el día en el que querés conocerlo."), alt: t("Demostración de cómo guardar un museo y elegir su día de visita") },
-  { image: "expenses-video", video: "expenses", label: t("Gasto rápido"), title: t("Un gasto, en segundos."), text: t("Ingresá el monto, elegí una categoría y guardá. El total de tu viaje se actualiza en el inicio."), alt: t("Demostración de un gasto de 25 dólares y su total actualizado") },
-  { image: "widgets", label: "Widgets", title: t("Tu viaje, más a mano."), text: t("Consultá tu próxima actividad y el gasto acumulado desde la pantalla de inicio. Con accesos a gastos, lugares y mapa."), alt: t("Widgets de TripPilot con próxima actividad, total gastado y accesos rápidos") },
-];
+  const { t } = useLocale();
+  const slides = [
+    { image: "home", label: t("Inicio"), title: t("Tu día, de un vistazo."), text: t("Consultá el destino, tu alojamiento y la próxima actividad en una sola pantalla.", "See the destination, your lodging, and the next activity on one screen."), alt: t("Inicio de TripPilot con el destino y la próxima actividad", "TripPilot home with the destination and next activity") },
+    { image: "itinerary", label: t("Itinerario"), title: t("Cada parada, en su lugar."), text: t("Organizá las actividades de cada día, cambiá su orden y consultá los tiempos entre una parada y otra."), alt: t("Itinerario con fechas, paradas y controles para reordenar", "Itinerary with dates, stops, and controls to reorder them") },
+    { image: "day", label: t("Hoy", "Today"), title: t("Lo que sigue en el viaje.", "What's next on the trip."), text: t("Revisá las paradas del día y abrí el recorrido desde la pantalla de inicio.", "Check today's stops and open the route from the home screen."), alt: t("Pantalla Hoy con la siguiente parada y las actividades del día", "Today screen with the next stop and the day's activities") },
+    { image: "saved", label: t("Guardados"), title: t("Tus lugares, siempre a mano."), text: t("Consultá tus lugares guardados y volvé al mapa para ubicarlos.", "Browse saved places and return to the map to find them."), alt: t("Lista de lugares guardados sobre el mapa", "Saved places list over the map") },
+    { image: "expenses", label: t("Gastos", "Expenses"), title: t("Tu presupuesto durante el viaje.", "Your budget as you travel."), text: t("Consultá cuánto gastaste, cuánto queda y cómo se reparten los gastos por categoría o ciudad.", "See what you've spent, what remains, and how expenses break down by category or city."), alt: t("Presupuesto, categorías y movimientos del viaje", "Trip budget, expense categories, and transactions") },
+    { image: "home-dark", label: t("Modo oscuro", "Dark mode"), title: t("El viaje en modo oscuro.", "The trip in dark mode."), text: t("La pantalla de inicio conserva el destino, el alojamiento y la próxima actividad en el tema oscuro.", "The home screen keeps the destination, lodging, and next activity visible in dark mode."), alt: t("Inicio de TripPilot en modo oscuro", "TripPilot home in dark mode") },
+  ];
 
   const [index, setIndex] = useState(0);
   const [paused, setPaused] = useState(false);
   const [reduced, setReduced] = useState(false);
-  const [manualVideo, setManualVideo] = useState(true);
   const [visible, setVisible] = useState(false);
   const [focused, setFocused] = useState(false);
   const container = useRef<HTMLDivElement>(null);
-  const video = useRef<HTMLVideoElement>(null);
   const [pageVisible, setPageVisible] = useState(true);
   useEffect(() => {
     const sync = () => setPageVisible(!document.hidden);
@@ -37,7 +29,7 @@ const slides: Slide[] = [
   }, []);
   useEffect(() => {
     const media = matchMedia("(prefers-reduced-motion: reduce)");
-    const sync = () => { setReduced(media.matches); setManualVideo(matchMedia("(pointer: coarse)").matches); };
+    const sync = () => setReduced(media.matches);
     sync(); media.addEventListener("change", sync);
     return () => media.removeEventListener("change", sync);
   }, []);
@@ -49,22 +41,12 @@ const slides: Slide[] = [
   const playing = active && visible && pageVisible && !paused && !reduced && !focused;
   const slide = slides[index];
   useEffect(() => {
-    if (!playing || slide.video) return;
-    const timer = setInterval(() => {
+    if (!playing) return;
+    const timer = setTimeout(() => {
       if (!document.hidden) setIndex(value => (value + 1) % slides.length);
     }, 5000);
-    return () => clearInterval(timer);
-  }, [playing, index, slide.video, slides.length]);
-  useEffect(() => {
-    const element = video.current;
-    if (!element) return;
-    if (!active || !visible || !pageVisible || paused) { element.pause(); return; }
-    if (manualVideo) return;
-    if (playing) {
-      if (element.ended) element.currentTime = 0;
-      void element.play().catch(() => { /* Native controls remain available if autoplay is blocked. */ });
-    } else element.pause();
-  }, [playing, index, active, visible, pageVisible, manualVideo, paused]);
+    return () => clearTimeout(timer);
+  }, [playing, index, slides.length]);
   return <div ref={container} className="trip-project-content trip-showcase" role="region" aria-label={t("Funciones de TripPilot")} aria-roledescription={t("carrusel", "carousel")}
     onFocusCapture={() => setFocused(true)} onBlurCapture={event => { if (!event.currentTarget.contains(event.relatedTarget)) setFocused(false); }}>
     <div className="trip-project-copy">
@@ -85,8 +67,9 @@ const slides: Slide[] = [
     </div>
     <div className="trip-showcase-phone">
       {slides.map((item, i) => <div key={item.image} className="trip-showcase-frame" data-current={i === index} aria-hidden={i !== index}>
-        {item.video ? (i === index && <video ref={video} key={item.video} src={`/videos/trippilot/${item.video}.mp4`} muted playsInline controls preload="none" poster={`/images/trippilot/video-${item.video}.webp`} aria-label={item.alt} onEnded={() => { if (playing) setIndex(value => (value + 1) % slides.length); }} />) :
-        ((i === index || i === (index + 1) % slides.length) && <Image src={`/images/trippilot/demo-${item.image}.png`} width={1206} height={2622} alt={item.alt} sizes="(max-width: 700px) 65vw, 300px" loading="eager" />)}
+        {(i === index || i === (index + 1) % slides.length) && (
+          <Image src={`/images/trippilot/current-${item.image}.webp`} width={780} height={1696} alt={item.alt} sizes="(max-width: 700px) 65vw, 300px" loading="eager" />
+        )}
       </div>)}
     </div>
   </div>;

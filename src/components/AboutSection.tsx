@@ -1,6 +1,6 @@
 "use client";
 import { useLocale } from "./LocaleProvider";
-import Image from "next/image";
+import DesignShowcase from "./DesignShowcase";
 
 import { useEffect, useRef } from "react";
 import TechnologyStack from "@/components/TechnologyStack";
@@ -41,12 +41,7 @@ const approach = [
     </div>
     <div className="about-approach" aria-label={t("Mi forma de trabajar")}>
       <div className="about-design-feature about-reveal">
-        <figure className="about-design-figure">
-          <div className="about-design-image"><div className="about-design-phone">
-            <Image src="/images/trippilot/demo-itinerary.png" alt={t("Pantalla del itinerario de TripPilot", "TripPilot itinerary screen")} width={1206} height={2622} sizes="(max-width: 700px) 114px, 160px" />
-          </div></div>
-          <figcaption>TripPilot · {t("diseño y desarrollo", "design and development")}</figcaption>
-        </figure>
+        <DesignShowcase />
         <div className="about-design-copy"><span className="about-principle-number">01 / {t("Diseño")}</span>
           <h3>{t("Jerarquía, espacio y claridad.", "Hierarchy, space and clarity.")}</h3>
           <p>{t("Cada decisión visual tiene que ayudar a entender y usar el producto.", "Every visual decision should make the product easier to understand and use.")}</p>
