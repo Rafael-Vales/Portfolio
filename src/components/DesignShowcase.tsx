@@ -11,7 +11,7 @@ const examples = [
     alt: ["Inicio de TripPilot con el destino y la próxima actividad", "TripPilot home with the destination and next activity"],
   },
   {
-    src: "/images/consultorio/agenda.webp", width: 1440, height: 960,
+    src: "/images/consultorio/caso-agenda-escritorio.webp", width: 1440, height: 960,
     project: "Consultorio", label: ["Agenda semanal · Maqueta", "Weekly schedule · Mockup"],
     alt: ["Maqueta de la agenda del consultorio con turnos y horarios bloqueados", "Clinic schedule mockup with appointments and blocked time"],
   },

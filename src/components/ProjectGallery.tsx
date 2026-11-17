@@ -330,7 +330,7 @@ const projects = [
 										<span aria-hidden="true">↗</span>
 									</div>
 								)}
-                                {index === 2 && <span className="clinic-card-status">{t("En desarrollo")}</span>}
+                                {index === 2 && <div className="clinic-card-status"><p>{t("Reserva móvil, agenda, señas y atención clínica.", "Mobile booking, scheduling, deposits, and clinical care.")}</p><span>{t("Tesis · Equipo de 4 · En desarrollo", "Thesis · Team of 4 · In development")}</span></div>}
                                 {index === 1 && <div className="animal-card-footer">
                                   <p>{t("Alimentos y accesorios")}<br />{t("para tu mascota.")}</p>
                                   <span aria-hidden="true">↗</span>
