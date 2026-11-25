@@ -54,7 +54,7 @@ const translations: Record<string, string> = {
   "En desarrollo": "In development",
   "Construir en equipo.": "Building as a team.",
   "Tech Lead · Consultorio dermatológico": "Tech Lead · Dermatology clinic",
-  "Lideré técnicamente un equipo de cuatro personas. Trabajo con la clienta para definir las necesidades del consultorio y llevarlas al diseño del sistema.": "I led a four-person team technically. I work with the client to define the clinic's needs and translate them into the system design.",
+  "Lideré técnicamente un equipo de cuatro personas. Trabajé con la clienta para definir las necesidades del consultorio y llevarlas al diseño del sistema.": "I led a four-person team technically. I worked with the client to define the clinic's needs and translate them into the system design.",
   "Conectar las necesidades del cliente con las decisiones del equipo.": "Connecting the client's needs with the team's decisions.",
   "Mi recorrido": "My journey",
   "Etapas de mi recorrido": "Stages of my journey",
