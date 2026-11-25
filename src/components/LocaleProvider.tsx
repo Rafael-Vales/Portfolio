@@ -10,7 +10,7 @@ export function LocaleProvider({ locale, children }: { locale: Locale; children:
 export function useLocale() {
   const locale = useContext(LocaleContext);
   return { locale, t: (es: string, en?: string) => locale === "en" ? (en ?? translations[es] ?? es) : es,
-    cv: locale === "en" ? "/documents/CV_Rafael_Vales_EN.pdf" : "/documents/CV_Rafael_Vales.pdf" };
+    cv: locale === "en" ? "/documents/CV_Rafael_Vales_EN.pdf" : "/documents/CV_Rafael_Vales_ES.pdf" };
 }
 export function LanguageSwitcher() {
   const { locale } = useLocale();

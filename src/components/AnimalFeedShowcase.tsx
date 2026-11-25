@@ -6,7 +6,7 @@ import { useLayoutEffect, useRef, useState } from "react";
 
 const STORE_URL = "https://ecommerce-los-abuelos.vercel.app/";
 
-export default function AnimalFeedShowcase({ trying, onTry, onReturn }: { trying: boolean; onTry: () => void; onReturn: () => void }) {
+export default function AnimalFeedShowcase({ trying, onTry, onReturn, repoUrl }: { trying: boolean; onTry: () => void; onReturn: () => void; repoUrl?: string }) {
   const {t}=useLocale();
   const [loaded, setLoaded] = useState(false);
   const tryButton = useRef<HTMLButtonElement>(null);
@@ -41,6 +41,7 @@ export default function AnimalFeedShowcase({ trying, onTry, onReturn }: { trying
       <ul className="animal-project-features"><li>{t("Catálogo y búsqueda")}</li><li>{t("Filtros y favoritos")}</li><li>{t("Carrito de compra")}</li></ul>
       <button ref={tryButton} className="animal-project-cta animal-try-desktop" onClick={() => { setLoaded(false); onTry(); }}>{t("Probar tienda")}<span aria-hidden="true">↗</span></button>
       <a className="animal-project-cta animal-try-mobile" href={STORE_URL} target="_blank" rel="noopener noreferrer">{t("Probar tienda")}<span aria-hidden="true">↗</span></a>
+      {" "}{repoUrl && <a href={repoUrl} target="_blank" rel="noopener noreferrer">{t("Ver código", "View code")} <span aria-hidden="true">↗</span></a>}
       <small className="animal-project-note">{t("Demo con productos de ejemplo y compra simulada.")}</small>
     </div>
     <div className="animal-store-preview">

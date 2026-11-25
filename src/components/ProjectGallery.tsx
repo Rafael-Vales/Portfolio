@@ -17,9 +17,9 @@ const mobileProjectQuery = "(max-width: 700px), (max-width: 1000px) and (max-hei
 const slugs = ["trippilot", "animal-feed", "consultorio"];
 export default function ProjectGallery({ initialProject }: { initialProject?: string }) {
  const {t,locale}=useLocale();
-const projects = [
+const projects: { name: string; style: string; repoUrl?: string }[] = [
 	{ name: "TripPilot", style: "trip" },
-	{ name: "Animal Feed", style: "shop" },
+	{ name: "Animal Feed", style: "shop", repoUrl: "https://github.com/Rafael-Vales/ecommerce-los-abuelos" },
 	{ name: t("Consultorio dermatológico"), style: "clinic" },
 ];
 
@@ -373,7 +373,7 @@ const projects = [
 									</>
 								) : selected === 1 ? (
                                     <>
-                                      <AnimalFeedShowcase trying={tryingStore} onTry={() => setTryingStore(true)} onReturn={() => setTryingStore(false)} />
+                                      <AnimalFeedShowcase repoUrl={projects[selected].repoUrl} trying={tryingStore} onTry={() => setTryingStore(true)} onReturn={() => setTryingStore(false)} />
                                       {!tryingStore && <div className="trip-project-emblem animal-project-emblem" style={{viewTransitionName:"project-mark"}}><AnimalFeedLogo /></div>}
                                     </>
                                 ) : (

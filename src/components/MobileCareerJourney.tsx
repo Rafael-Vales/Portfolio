@@ -16,15 +16,15 @@ const titles = [
   ["Creé una app para dividir gastos.", "I built an app to split expenses."],
   ["Desarrollé una tienda online completa.", "I developed a complete online store."],
   ["Diseñé y desarrollé una app para iPhone.", "I designed and built an iPhone app."],
-  ["Construí un punto de venta sin conexión.", "I built a point of sale that works offline."],
-  ["Lidero un equipo de cuatro personas.", "I lead a four-person team."],
+  ["Estoy desarrollando un punto de venta.", "I'm building a point of sale."],
+  ["Lideré un equipo de cuatro personas.", "I led a four-person team."],
 ];
 const summaries = [
   ["Tres años en IDRA: C#, .NET, SQL y bases de datos que hoy aplico a mis productos.", "Three years at IDRA: C#, .NET, SQL and databases I now apply to my products."],
   ["De una necesidad cotidiana a un producto con usuarios reales.", "From an everyday need to a product with real users."],
   ["Del catálogo al pago, trabajando para Los Abuelos Pet Shop.", "From catalog to payment, working for Los Abuelos Pet Shop."],
   ["Itinerarios, mapas y lugares en una experiencia nativa. En desarrollo.", "Itineraries, maps and places in a native experience. In development."],
-  ["Tres cajas simultáneas. Las ventas siguen aunque se corte internet.", "Three simultaneous checkouts. Sales continue even when internet stops."],
+  ["Diseñado para tres cajas simultáneas y ventas sin conexión. En desarrollo; todavía no está implementado en el comercio.", "Designed for three concurrent registers and offline sales. In development; not yet deployed in the store."],
   ["Tesis para un consultorio real: reserva móvil, agenda, señas y seguimiento clínico.", "Thesis project for a real clinic: mobile booking, scheduling, deposits, and clinical follow-up."],
 ];
 
