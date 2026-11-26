@@ -1,60 +1,69 @@
-# Portfolio — Rafael Vales
+# Rafael Vales — Portfolio
 
-Portfolio con proyectos, casos técnicos, recorrido, CV en español e inglés y contacto. Next.js 16, React y TypeScript; no requiere base de datos ni credenciales de aplicaciones fuente.
+My bilingual personal portfolio: projects, product decisions, and the work behind them.
 
-## Desarrollo y comprobaciones
+**Live:** [rafaelvales.com](https://rafaelvales.com) · [English version](https://rafaelvales.com/en)
+
+## Features
+
+- Spanish and English pages with language-specific CV downloads.
+- Interactive particle portrait with pointer and touch input, a pause control, and reduced-motion handling.
+- Project gallery featuring TripPilot, Animal Feed, and a dermatology clinic project, with direct links to selected projects.
+- Clinic screenshot viewer covering desktop screens, mobile booking, and the QR photo-upload flow.
+- Animal Feed demo embedded from its separate deployment, with a link to its public code.
+- Product-decision walkthroughs, a career timeline, technology overview, and contact links.
+- Light and dark themes, page metadata, sitemap, robots file, and Person structured data.
+
+## Stack
+
+Next.js 16 App Router, React 19, TypeScript, Tailwind CSS 4, custom CSS, and Canvas/WebGL rendering. Fraunces is bundled locally for headings.
+
+## Architecture
+
+- `src/app/`: Spanish home page, `/en`, metadata endpoints, and global styles.
+- `src/components/`: project showcases, navigation, career timeline, and interactive UI.
+- `src/content/translations.ts` and `LocaleProvider`: shared translation lookup and locale-specific links.
+- `src/lib/particle-motion.ts` and `particle-renderer.ts`: particle rendering helpers used by the portrait component.
+- `public/`: screenshots, videos, CV PDFs, and other downloadable assets.
+
+The portfolio does not require a database or credentials for the projects it showcases. Those projects run separately. Documents are rendered per request to support a nonce-based Content Security Policy; this is not a static export.
+
+## Run locally
+
+Use Node.js 22.12+ and npm.
 
 ```sh
+git clone https://github.com/Rafael-Vales/Portfolio.git
+cd Portfolio
 npm ci
-npm run dev -- --port 3011
-npm run lint
-npm run build
-npm run start -- --port 3011
+npm run dev
 ```
 
-`build` utiliza Webpack. No es una exportación estática: los documentos se renderizan por solicitud y reciben un nonce nuevo para su política de scripts.
-
-## Preparado para Vercel
-
-- Importar el repositorio **Rafael-Vales/Portfolio** con preset **Next.js** y raíz del repositorio.
-- Instalación: `npm ci`. Build: `npm run build`. Output: valor predeterminado de Next.js; no configurar `out`.
-- No hacen falta claves de Supabase, TripPilot, correo ni otras credenciales para este portfolio.
-- `NEXT_PUBLIC_SITE_URL` es opcional y debe contener únicamente la URL pública definitiva, con `https://`. Si no se configura, se usa `VERCEL_PROJECT_PRODUCTION_URL`; fuera de Vercel, localhost:3011.
-- Nunca poner secretos en variables `NEXT_PUBLIC_*`: llegan al navegador.
-- Las previews llevan `noindex`. Tras el primer despliegue, revisar ambos idiomas, CV, proyectos, videos y la demo de Animal Feed en la URL real.
-- Esta preparación no publica por sí sola en Vercel.
-
-## Prevención de secretos
-
-El flujo de GitHub Actions revisa archivos privados e historial con [Gitleaks](https://github.com/gitleaks/gitleaks), fijado a 8.30.1; la acción de checkout está fijada por commit y el binario se verifica por SHA-256. Revisa todas las ramas e historial disponibles, incluso cambios integrados mediante merge. No sube informes con claves ni publica comentarios.
-
-En este checkout quedó instalado un hook local `pre-push`. Antes de cualquier push verifica el historial y el índice, y rechaza archivos privados o credenciales detectadas. Los valores encontrados se muestran completamente ocultos.
-
-Para activar el mismo control en otra copia:
-
-1. Instalar Gitleaks 8.30.1 desde su distribución oficial y ponerlo en PATH, o indicar la ruta del ejecutable mediante `GITLEAKS_BIN`.
-2. Ejecutar `git config --local core.hooksPath .githooks`.
-3. Ejecutar:
+Open [localhost:3000](http://localhost:3000). No environment variables are required for local development.
 
 ```sh
+npm run lint
+npx tsc --noEmit
+npm run build
+npm start
+```
+
+The build script explicitly uses Webpack. For Vercel, use the Next.js preset, `npm ci`, and `npm run build`, with the default output directory.
+
+## Secret checks and public assets
+
+The repository includes a Gitleaks-based GitHub Actions workflow and an optional local pre-push hook. To enable the hook, install Gitleaks 8.30.1 on your PATH (or set `GITLEAKS_BIN`), then run:
+
+```sh
+git config --local core.hooksPath .githooks
 npm run security
 npm run test:security
 ```
 
-La copia actual dispone del ejecutable verificado en `.git/tools/gitleaks`; no se versiona ni se envía a Vercel. Las pruebas generan credenciales sintéticas en repositorios temporales, comprueban que se bloqueen y los eliminan al terminar.
+Everything under `public/` is publicly downloadable. Review new screenshots, documents, and media before committing them.
 
-El hook puede omitirse deliberadamente desde Git: no sustituye el control del servidor. Actions detecta en pushes y pull requests; para impedir merges futuros con un control rojo, configurar `secrets` como check obligatorio en las reglas de main, si el plan de GitHub lo permite. No se cambiaron reglas de protección remotas.
+## Author
 
-## Privacidad del contenido
+Built by **Rafael Vales**, a full-stack developer focused on frontend.
 
-- Los recursos en `public/`, incluidos fotos, CV, capturas y videos, son descargables sin autenticación.
-- Se limpiaron metadatos de imágenes y CV sin alterar sus píxeles ni su contenido. Las capturas muestran la demostración de TripPilot seleccionada para el portfolio: ciudades, alojamiento, fechas e importes visibles.
-- Antes de agregar material nuevo, revisar notificaciones, datos de cuentas, reservas privadas, números de documentos, claves y metadatos de ubicación.
-- La tienda incrustada de Animal Feed es otra aplicación; sus permisos y datos se revisan en su repositorio.
-- El historial existente no fue reescrito. Las versiones antiguas de los recursos permanecen en Git.
-
-## Cabeceras
-
-CSP por documento con nonce en `/` y `/en`; scripts sin `unsafe-inline` ni `unsafe-eval` en producción. Los estilos inline siguen permitidos para React y las animaciones. Solo se autoriza el iframe de `ecommerce-los-abuelos.vercel.app`.
-
-También se aplican `nosniff`, bloqueo de embedding externo, política de referrer, permisos restringidos y HSTS en producción. `X-Powered-By` está desactivado. El endurecimiento no equivale a una garantía de ausencia de vulnerabilidades; debe comprobarse de nuevo en el despliegue real.
+[Website](https://rafaelvales.com) · [LinkedIn](https://www.linkedin.com/in/rafael-vales/) · [GitHub](https://github.com/Rafael-Vales)
